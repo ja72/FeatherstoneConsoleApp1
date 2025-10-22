@@ -35,10 +35,10 @@ namespace Featherstone.ScrewCalculus
         #region Properties
         public Vector3 Linear => this.linear;
         public Vector3 Angular => this.angular;
-        public double Magnitude => this.angular.Magnitude;
-        public Vector3 Direction => Vector3.Normalized(this.angular);
-        public double Pitch => Vector3.Dot(this.angular, this.linear)/this.angular.MagnitudeSquared;
-        public Vector3 Position => Vector3.Cross(this.angular, this.linear)/this.angular.MagnitudeSquared;
+        public double Magnitude => this.linear.Magnitude;
+        public Vector3 Direction => Vector3.Normalized(this.linear);
+        public double Pitch => Vector3.Dot(this.linear, this.angular)/this.linear.MagnitudeSquared;
+        public Vector3 Position => Vector3.Cross(this.linear, this.angular)/this.linear.MagnitudeSquared;
         #endregion
 
         #region Algebra

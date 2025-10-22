@@ -128,16 +128,16 @@ namespace Featherstone.VectorCalculus
         #endregion
 
         #region Operators
+        public static Vector3 operator -(Vector3 v) => Negate(v);
         public static Vector3 operator +(Vector3 a, Vector3 b) => Add(a, b);
         public static Vector3 operator -(Vector3 a, Vector3 b) => Subtract(a, b);
         public static Vector3 operator *(Vector3 v, double s) => Scale(v, s);
-        public static Vector3 operator -(Vector3 v) => Negate(v);
         public static Vector3 operator *(double s, Vector3 v) => v*s;
         public static Vector3 operator /(Vector3 v, double s) => Divide(v, s);
         #endregion
 
         #region IEquatable Members
-        public bool Equals(Vector3 other) => X==other.X&&Y==other.Y&&Z==other.Z;
+        public bool Equals(Vector3 other) => x==other.x&&y==other.y&&z==other.z;
         public override bool Equals(object obj) => obj is Vector3 other&&Equals(other);
 
         public override int GetHashCode()

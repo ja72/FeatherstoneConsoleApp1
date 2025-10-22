@@ -16,7 +16,7 @@ namespace Featherstone.ScrewCalculus
         public Twist33(Vector3 linear, Vector3 angular)
         {
             this.linear=linear;
-            this.angular=angular;
+            this.angular=angular
         }
         public static Twist33 At(Vector3 angular, Vector3 position, double pitch = 0.0)
             => new Twist33(

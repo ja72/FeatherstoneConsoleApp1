@@ -19,6 +19,8 @@ namespace Featherstone.VectorCalculus
         }
         public static implicit operator Pose3(Vector3 position) => Pose3.At(position);
         public static implicit operator Pose3(Quaternion3 orientation) => Pose3.About(orientation);
+        public static implicit operator Vector3(Pose3 pose) => pose.position;
+        public static implicit operator Quaternion3(Pose3 pose) => pose.orientation;
         public static Pose3 Identity { get; } = new Pose3(Vector3.Zero, Quaternion3.Identity);
         public static Pose3 About(Quaternion3 orientation) => new Pose3(Vector3.Zero, orientation);
         public static Pose3 At(Vector3 position) => new Pose3(position, Quaternion3.Identity);
@@ -54,6 +56,7 @@ namespace Featherstone.VectorCalculus
         }
         public static Pose3 operator +(Pose3 a, Pose3 b) => Add(a, b);
         public static Pose3 operator -(Pose3 a, Pose3 b) => Subtract(a, b);
+        public static Pose3 operator + (Pose3 a, Vector3 b) => Add(a, At(b));
         #endregion
     }
 }

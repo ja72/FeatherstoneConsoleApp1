@@ -92,7 +92,7 @@ namespace Featherstone.Dynamics
 
             // Propagate Kinematics Up The Chain
             Pose3[] top = new Pose3[n];
-            Pose3[] cg = new Pose3[n];
+            Vector3[] cg = new Vector3[n];            
             Twist33[] s = new Twist33[n];
             Twist33[] v = new Twist33[n];
             Matrix33[] I = new Matrix33[n];
@@ -117,15 +117,72 @@ namespace Featherstone.Dynamics
                 }
                 Joint joint   = joints[item.jointIndex];
                 RigidBody body    = bodies[item.bodyIndex];
-                pos = joint.GetJointStep(pos, q[i_item]);
+                pos+=joint.localPosition;
+                Vector3 stepPos;
+                Quaternion3 stepOri;
+                switch (joint.type)
+                {
+                    case JointType.Screw:
+                    {
+                        stepPos=Vector3.Scale(joint.localAxis*joint.pitch, q[i_item]);
+                        stepOri=Quaternion3.FromAxisAngle(joint.localAxis, q[i_item]);
+                        pos += Pose3.At(stepPos, stepOri);
+                        break;
+                    }
+                    case JointType.Revolute:
+                    {
+                        stepPos=Vector3.Zero;
+                        stepOri=Quaternion3.FromAxisAngle(joint.localAxis, q[i_item]);
+                        pos += Pose3.At(stepPos, stepOri);
+                        break;
+                    }
+                    case JointType.Prismatic:
+                    {
+                        stepPos=Vector3.Scale(joint.localAxis, q[i_item]);
+                        stepOri=Quaternion3.Identity;
+                        pos += Pose3.At(stepPos, stepOri);
+                        break;
+                    }
+                    default:
+                    throw new NotSupportedException("Unknown joint type.");
+                }
+                // Set top of joint position
                 top[i_item] = pos;
-                cg[i_item]  = body.GetCenterOfMass(pos);
-                w[i_item]   = Wrench33.At(body.mass * gee, cg[i_item].position);
+                // Find Center of mass
+                cg[i_item]  = pos + body.centerOfMass;
 
-                //tex: Joint Screw Axis $$s_i = \begin{bmatrix}
+                //tex: Joint Screw Axis $$s_i = \begin{bmatrix} \vec{r}_i \times \hat{z}_i \\ \hat{z}_i \end{bmatrix}$$
+                Matrix3 Ic = Dynamics.GetMmoiMatrix(body, pos);
+
+                // Get weight wrench
+                w[i_item]   = Wrench33.At(body.mass * gee, cg[i_item]);
+
                 //\vec{r}_i \times \hat{z}_i \\ \hat{z}_i
                 //\end{bmatrix}$$
-                s[i_item]   = joint.GetJointAxis(pos);;
+                //\end{bmatrix}$$
+                Vector3 axis = pos.orientation.Rotate(joint.localAxis);
+                switch (joint.type)
+                {
+                    case JointType.Screw:
+                    {
+                        s[i_item] = Twist33.At(axis, pos.position, joint.pitch);
+                        break;
+                    }
+                    case JointType.Revolute:
+                    {
+                        s[i_item] = Twist33.At(axis, pos.position, 0.0);
+                        break;
+                    }
+                    case JointType.Prismatic:
+                    {
+                        s[i_item] = Twist33.Pure(axis);
+                        break;
+                    }
+                    default:
+                        throw new NotSupportedException("Unknown joint type.");
+                }
+
+                
                 Twist33 sqp = s[i_item] * qp[i_item];
 
                 //tex: Velocity Recursion $$v_i = v_{i-1} + s_i \dot{q}_i$$
@@ -137,7 +194,7 @@ namespace Featherstone.Dynamics
                 //tex: Spatial Inertia $$\mathbf{I}_i = \begin{bmatrix} 
                 // m_i & -m_i \vec{c}_i\times \\
                 // m_i \vec{c}_i\times & \mathrm{I}_C - m_i \vec{c}_i\times \vec{c}_i\times \end{bmatrix}$$
-                I[i_item]   = body.Spi(cg[i_item]);
+                I[i_item]=Dynamics.Spi(body.mass, Ic, cg[i_item]);
 
                 //tex: Momentum $$ \ell_i = \mathbf{I}_i v_i $$
                 l[i_item]   = I[i_item] * v[i_item];

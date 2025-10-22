@@ -136,6 +136,7 @@ namespace Featherstone.ScrewCalculus
         #endregion
 
         #region Operators
+        public static Matrix33 operator -(Matrix33 a) => Negate(a);
         public static Matrix33 operator +(Matrix33 a, Matrix33 b) => Add(a, b);
         public static Matrix33 operator -(Matrix33 a, Matrix33 b) => Subtract(a, b);
         public static Vector33 operator *(Matrix33 a, Vector33 b) => Product(a, b);

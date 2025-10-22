@@ -76,8 +76,8 @@ namespace Featherstone.ScrewCalculus
         #endregion
 
         #region Operators
-        public static Vector33 operator +(Vector33 a, Vector33 b) => Add(a, b);
         public static Vector33 operator -(Vector33 a) => Negate(a);
+        public static Vector33 operator +(Vector33 a, Vector33 b) => Add(a, b);
         public static Vector33 operator -(Vector33 a, Vector33 b) => Subtract(a, b);
         public static Vector33 operator *(double f, Vector33 a) => Scale(a, f);
         public static Vector33 operator *(Vector33 a, double f) => Scale(a, f);

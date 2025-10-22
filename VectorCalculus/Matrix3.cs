@@ -175,8 +175,59 @@ namespace Featherstone.VectorCalculus
         public double M31 => m31;
         public double M32 => m32;
         public double M33 => m33; 
+
+        public double this[int row, int column]
+        {
+            get
+            {
+                if (row<0||row>2) throw new ArgumentOutOfRangeException(nameof(row));
+                if (column<0||column>2) throw new ArgumentOutOfRangeException(nameof(column));
+                int index = 3*row+column;
+                switch (index)
+                {
+                    case 0: return m11;
+                    case 1: return m12;
+                    case 2: return m13;
+                    case 3: return m21;
+                    case 4: return m22;
+                    case 5: return m23;
+                    case 6: return m31;
+                    case 7: return m32;
+                    case 8: return m33;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+        public double Trace() =>  Trace(this);
+        public double Determinant() => Determinant(this);
+        public Matrix3 Transpose() => Transpose(this);
+        public Matrix3 ToDiagonal() => Matrix3.Diagonal(m11, m22, m33);
+        public Matrix3 ToSymmetric() => (this+Transpose(this))/2.0;
+        public Matrix3 ToSkewSymmetric() => (this-Transpose(this))/2.0;
+        public Matrix3 ToUpperTriangular(bool includeDiagonal = true) =>
+            includeDiagonal ?
+            new Matrix3(
+                m11, m12, m13,
+                0.0, m22, m23,
+                0.0, 0.0, m33) :
+            new Matrix3(
+                0.0, m12, m13,
+                0.0, 0.0, m23,
+                0.0, 0.0, 0.0);
+        public Matrix3 ToLowerTriangular(bool includeDiagonal = true) =>
+            includeDiagonal ?
+            new Matrix3(
+                m11, 0.0, 0.0,
+                m21, m22, 0.0,
+                m31, m32, m33) :
+            new Matrix3(
+                0.0, 0.0, 0.0,
+                m21, 0.0, 0.0,
+                m31, m32, 0.0);
+
         #endregion
 
+        #region Algebra
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3 Product(Vector3 v) => Product(this, v);
 
@@ -210,7 +261,7 @@ namespace Featherstone.VectorCalculus
                 a.m31*b.m13+a.m32*b.m23+a.m33*b.m33);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Trace(Matrix3 m) => m.m11 + m.m22 + m.m33;
+        public static double Trace(Matrix3 m) => m.m11+m.m22+m.m33;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 Transpose(Matrix3 m) =>
@@ -300,6 +351,8 @@ namespace Featherstone.VectorCalculus
             result=inv.Product(b);
             return true;
         }
+        #endregion
+        #region Equality
         public bool Equals(Matrix3 other) =>
             m11==other.m11&&m12==other.m12&&m13==other.m13&&
             m21==other.m21&&m22==other.m22&&m23==other.m23&&
@@ -324,7 +377,10 @@ namespace Featherstone.VectorCalculus
                 return hc;
             }
         }
+        #endregion
 
+        #region Operators
+        public static Matrix3 operator -(Matrix3 a) => Negate(a);
         public static Matrix3 operator +(Matrix3 a, Matrix3 b) => Add(a, b);
         public static Matrix3 operator -(Matrix3 a, Matrix3 b) => Subtract(a, b);
         public static Matrix3 operator *(Matrix3 a, Matrix3 b) => Product(a, b);
@@ -335,32 +391,13 @@ namespace Featherstone.VectorCalculus
         public static Matrix3 operator /(Matrix3 m, double d) => Divide(m, d);
         public static bool operator ==(Matrix3 left, Matrix3 right) => left.Equals(right);
         public static bool operator !=(Matrix3 left, Matrix3 right) => !left.Equals(right);
+        #endregion
 
+        #region Formatting
         public override string ToString() =>
-            $"[{(float)m11}, {(float)m12}, {(float)m13}; {(float)m21}, {(float)m22}, {(float)m23}; {(float)m31}, {(float)m32}, {(float)m33}]";
+            $"[{(float)m11}, {(float)m12}, {(float)m13}; {(float)m21}, {(float)m22}, {(float)m23}; {(float)m31}, {(float)m32}, {(float)m33}]"; 
 
-        public double this[int row, int column]
-        {
-            get
-            {
-                if (row<0||row>2) throw new ArgumentOutOfRangeException(nameof(row));
-                if (column<0||column>2) throw new ArgumentOutOfRangeException(nameof(column));
-                int index = 3*row+column;
-                switch (index)
-                {
-                    case 0: return m11;
-                    case 1: return m12;
-                    case 2: return m13;
-                    case 3: return m21;
-                    case 4: return m22;
-                    case 5: return m23;
-                    case 6: return m31;
-                    case 7: return m32;
-                    case 8: return m33;
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
+        #endregion
 
         public unsafe ReadOnlySpan<double> AsSpan()
         {

@@ -50,6 +50,7 @@ namespace Featherstone.ScrewCalculus
                 Vector3.Cross(@this.linear, other.linear)+Vector3.Cross(@this.angular, other.angular)
             );
         }
+        public static Wrench33 operator -(Wrench33 a) => new Wrench33(-a.linear, -a.angular);
         public static Wrench33 operator + (Wrench33 a, Wrench33 b) 
             => new Wrench33(
                 a.linear  + b.linear,

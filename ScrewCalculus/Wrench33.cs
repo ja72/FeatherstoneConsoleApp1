@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using Featherstone.VectorCalculus;
+using JA.VectorCalculus;
 
-namespace Featherstone.ScrewCalculus
+namespace JA.ScrewCalculus
 {
     /// <summary>
     /// Immutable 3D screw to hold wrenches in (linear/angular) form.
@@ -13,11 +13,12 @@ namespace Featherstone.ScrewCalculus
         internal readonly Vector3 linear, angular;
 
         #region Factory
-        public Wrench33(Vector3 linear, Vector3 angular)
+        Wrench33(Vector3 linear, Vector3 angular)
         {
             this.linear=linear;
             this.angular=angular;
         }
+        public static Wrench33 Zero { get; } = new Wrench33(Vector3.Zero, Vector3.Zero);
         public static Wrench33 At(Vector3 linear, Vector3 position, double pitch = 0.0)
             => new Wrench33(
                 linear,
@@ -28,7 +29,7 @@ namespace Featherstone.ScrewCalculus
                 Vector3.Zero,
                 angular
             );
-        public static implicit operator Wrench33(Vector33 vector)
+        public static explicit operator Wrench33(Vector33 vector)
             => new Wrench33(vector.v1, vector.v2);   
         #endregion
 
@@ -43,13 +44,41 @@ namespace Featherstone.ScrewCalculus
 
         #region Algebra
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Wrench33 Cross(Twist33 @this, Twist33 other)
+        {
+            return new Wrench33(
+                Vector3.Cross(@this.angular, other.angular),
+                Vector3.Cross(@this.angular, other.linear) + Vector3.Cross(@this.linear, other.angular)
+            );
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Wrench33 Cross(Wrench33 @this, Twist33 other)
+        {
+            return new Wrench33(
+                Vector3.Cross(@this.linear, other.angular), 
+                Vector3.Cross(@this.linear, other.linear) + Vector3.Cross(@this.angular, other.angular)
+            );
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Wrench33 Cross(Twist33 @this, Wrench33 other)
         {
             return new Wrench33(
                 Vector3.Cross(@this.angular, other.linear),
-                Vector3.Cross(@this.linear, other.linear)+Vector3.Cross(@this.angular, other.angular)
+                Vector3.Cross(@this.angular, other.angular) + Vector3.Cross(@this.linear, other.linear)
             );
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Wrench33 Cross(Wrench33 @this, Wrench33 other)
+        {
+            return new Wrench33(
+                Vector3.Cross(@this.linear, other.linear),
+                Vector3.Cross(@this.linear, other.angular) + Vector3.Cross(@this.angular, other.linear)
+            );
+        }
+
+        #endregion
+
+        #region Operetors
         public static Wrench33 operator -(Wrench33 a) => new Wrench33(-a.linear, -a.angular);
         public static Wrench33 operator + (Wrench33 a, Wrench33 b) 
             => new Wrench33(
@@ -69,6 +98,12 @@ namespace Featherstone.ScrewCalculus
             => new Wrench33(
                 a.linear  / divisor,
                 a.angular / divisor);
+
+        //public static Wrench33 operator ^(Twist33 a, Twist33 b)   => Cross(a, b);
+        //public static Wrench33 operator ^(Twist33 a, Wrench33 b)  => Cross(a, b);
+        public static Wrench33 operator ^(Wrench33 a, Twist33 b)  => Cross(a, b);
+        public static Wrench33 operator ^(Wrench33 a, Wrench33 b) => Cross(a, b); 
+
         #endregion
 
         #region IEquatable Members

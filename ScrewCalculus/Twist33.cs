@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using Featherstone.VectorCalculus;
+using JA.VectorCalculus;
 
-namespace Featherstone.ScrewCalculus
+namespace JA.ScrewCalculus
 {
     /// <summary>
     /// Immutable 3D screw to hold twists in (linear/angular) form.
@@ -13,11 +13,12 @@ namespace Featherstone.ScrewCalculus
         internal readonly Vector3 linear, angular;
 
         #region Factory
-        public Twist33(Vector3 linear, Vector3 angular)
+        Twist33(Vector3 linear, Vector3 angular)
         {
             this.linear=linear;
             this.angular=angular;
         }
+        public static Twist33 Zero { get; } = new Twist33(Vector3.Zero, Vector3.Zero);
         public static Twist33 At(Vector3 angular, Vector3 position, double pitch = 0.0)
             => new Twist33(
                 angular*pitch+Vector3.Cross(position, angular),
@@ -28,7 +29,7 @@ namespace Featherstone.ScrewCalculus
                 linear, 
                 Vector3.Zero
             );
-        public static implicit operator Twist33(Vector33 vector)
+        public static explicit operator Twist33(Vector33 vector)
             => new Twist33(vector.v1, vector.v2);   
         #endregion
 
@@ -50,26 +51,57 @@ namespace Featherstone.ScrewCalculus
                 Vector3.Cross(@this.angular, other.angular)
             );
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Twist33 Cross(Wrench33 @this, Twist33 other)
+        {
+            return new Twist33(
+                Vector3.Cross(@this.linear, other.linear) + Vector3.Cross(@this.angular, other.angular),
+                Vector3.Cross(@this.linear, other.angular)
+            );
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Twist33 Cross(Twist33 @this, Wrench33 other)
+        {
+            return new Twist33(
+                Vector3.Cross(@this.angular, other.angular) + Vector3.Cross(@this.linear, other.linear),
+                Vector3.Cross(@this.angular, other.linear)
+            );
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Twist33 Cross(Wrench33 @this, Wrench33 other)
+        {
+            return new Twist33(
+                Vector3.Cross(@this.linear, other.angular) + Vector3.Cross(@this.angular, other.linear),
+                Vector3.Cross(@this.linear, other.linear)
+            );
+        }
+        #endregion
+
+        #region Operators
         public static Twist33 operator -(Twist33 a) => new Twist33(-a.linear, -a.angular);
-        public static Twist33 operator + (Twist33 a, Twist33 b) 
+        public static Twist33 operator +(Twist33 a, Twist33 b)
             => new Twist33(
-                a.linear  + b.linear,
-                a.angular + b.angular);
-        public static Twist33 operator - (Twist33 a, Twist33 b) 
+                a.linear+b.linear,
+                a.angular+b.angular);
+        public static Twist33 operator -(Twist33 a, Twist33 b)
             => new Twist33(
-                a.linear  - b.linear,
-                a.angular - b.angular);
-        public static Twist33 operator * (Twist33 a, double factor) 
+                a.linear-b.linear,
+                a.angular-b.angular);
+        public static Twist33 operator *(Twist33 a, double factor)
             => new Twist33(
-                a.linear  * factor,
-                a.angular * factor);
+                a.linear*factor,
+                a.angular*factor);
         public static Twist33 operator *(double factor, Twist33 a)
             => a*factor;
-        public static Twist33 operator / (Twist33 a, double divisor) 
+        public static Twist33 operator /(Twist33 a, double divisor)
             => new Twist33(
-                a.linear  / divisor,
-                a.angular / divisor);
+                a.linear/divisor,
+                a.angular/divisor);
 
+        public static Twist33 operator ^(Twist33 a, Twist33 b)   => Cross(a, b);
+        public static Twist33 operator ^(Twist33 a, Wrench33 b)  => Cross(a, b);
+        //public static Twist33 operator ^(Wrench33 a, Twist33 b)  => Cross(a, b);
+        //public static Twist33 operator ^(Wrench33 a, Wrench33 b) => Cross(a, b); 
         #endregion
 
         #region IEquatable Members

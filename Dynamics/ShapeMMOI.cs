@@ -1,8 +1,8 @@
 ﻿
 
-using Featherstone.VectorCalculus;
+using JA.VectorCalculus;
 
-namespace Featherstone.Dynamics
+namespace JA.Dynamics
 {
     public static class ShapeMMOI
     {

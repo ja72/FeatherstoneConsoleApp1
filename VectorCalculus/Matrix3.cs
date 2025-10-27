@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Featherstone.VectorCalculus
+namespace JA.VectorCalculus
 {
     /// <summary>
     /// Immutable 3x3 matrix using double precision.
@@ -36,6 +36,9 @@ namespace Featherstone.VectorCalculus
             this.m21=m21; this.m22=m22; this.m23=m23;
             this.m31=m31; this.m32=m32; this.m33=m33;
         }
+
+        public static implicit operator Matrix3(double value) => Scalar(value);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 Symmetric(
             double m11, double m12, double m13,
@@ -82,17 +85,32 @@ namespace Featherstone.VectorCalculus
             0.0, 1.0, 0.0,
             0.0, 0.0, 1.0);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CrossOp(Vector3 v) =>
-            new Matrix3(
+        public static Matrix3 CrossOp(Vector3 v, double scale = 1)
+        {
+            if (scale==0) return Zero;
+            if (scale!=1)
+            {
+                v*=scale;
+            }
+            return new Matrix3(
                 0.0, -v.z, v.y,
                 v.z, 0.0, -v.x,
                 -v.y, v.x, 0.0);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 MomentTensor(Vector3 v) =>
-            new Matrix3(
+        public static Matrix3 MomentTensor(Vector3 v, double scale = 1)
+        {
+            if (scale==0) return Zero;
+            if (scale!=1)
+            {
+                v*=scale;
+            }
+            return new Matrix3(
                 v.y*v.y+v.z*v.z, -v.x*v.y, -v.x*v.z,
                 -v.y*v.x, v.x*v.x+v.z*v.z, -v.y*v.z,
                 -v.z*v.x, -v.z*v.y, v.x*v.x+v.y*v.y);
+        }
 
         public static Matrix3 Rotation(Vector3 axis, double angle, bool inverse = false)
         {

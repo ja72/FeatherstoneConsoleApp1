@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Featherstone
+namespace JA
 {
     public interface ITree<T> where T : ITree<T>
     {

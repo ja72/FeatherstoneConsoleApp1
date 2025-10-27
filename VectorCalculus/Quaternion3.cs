@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Featherstone.VectorCalculus
+namespace JA.VectorCalculus
 {
     /// <summary>
     /// Immutable quaternion using double precision. 
@@ -27,7 +27,8 @@ namespace Featherstone.VectorCalculus
             this.z = z;
         }
         public static Quaternion3 FromVector(Vector3 vector) => new Quaternion3(0.0, vector.X, vector.Y, vector.Z);
-
+        public static Quaternion3 FromQuaternion(System.Numerics.Quaternion q)
+            => new Quaternion3(q.W, q.X, q.Y, q.Z);
         public double W => w;
         public double X => x;
         public double Y => y;

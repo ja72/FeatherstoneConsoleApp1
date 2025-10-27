@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Featherstone.VectorCalculus
+namespace JA.VectorCalculus
 {
     /// <summary>
     /// Immutable 3D vector using double precision.
@@ -43,6 +43,9 @@ namespace Featherstone.VectorCalculus
                 z
             );
         }
+
+        public static Vector3 FromVector(System.Numerics.Vector3 v)
+            => new Vector3(v.X, v.Y, v.Z);
         public static Vector3 Zero { get; } = new Vector3(0.0, 0.0, 0.0);
         public static Vector3 UnitX { get; } = new Vector3(1.0, 0.0, 0.0);
         public static Vector3 UnitY { get; } = new Vector3(0.0, 1.0, 0.0);
@@ -112,7 +115,7 @@ namespace Featherstone.VectorCalculus
         /// <returns><code>[y^2+z^2,-x*y,-x*z; -x*y,x^2+z^2,-y*z; -x*z,y*z,x^2+y^2]</code></returns>
         /// <remarks>Equals to <code>-CrossOp()*CrossOp()</code></remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Matrix3 MomentTensor() => Matrix3.MomentTensor(this);
+        public Matrix3 MomentTensor(double scale = 1) => Matrix3.MomentTensor(this, scale);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Negate(Vector3 v) => new Vector3(-v.x, -v.y, -v.z);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

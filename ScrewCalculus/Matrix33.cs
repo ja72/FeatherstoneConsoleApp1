@@ -2,10 +2,10 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Featherstone.VectorCalculus;
+using JA.VectorCalculus;
 
 
-namespace Featherstone.ScrewCalculus
+namespace JA.ScrewCalculus
 {
     /// <summary>
     /// Immutable 2x2 block matrix where each block is a 3x3 Matrix3.

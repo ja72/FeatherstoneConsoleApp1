@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Featherstone.VectorCalculus
+namespace JA.VectorCalculus
 {
     public readonly struct Pose3
     {
@@ -21,7 +21,7 @@ namespace Featherstone.VectorCalculus
         public static implicit operator Pose3(Quaternion3 orientation) => Pose3.About(orientation);
         public static implicit operator Vector3(Pose3 pose) => pose.position;
         public static implicit operator Quaternion3(Pose3 pose) => pose.orientation;
-        public static Pose3 Identity { get; } = new Pose3(Vector3.Zero, Quaternion3.Identity);
+        public static Pose3 Origin { get; } = new Pose3(Vector3.Zero, Quaternion3.Identity);
         public static Pose3 About(Quaternion3 orientation) => new Pose3(Vector3.Zero, orientation);
         public static Pose3 At(Vector3 position) => new Pose3(position, Quaternion3.Identity);
         public static Pose3 At(Vector3 position, Quaternion3 orientation) => new Pose3(position, orientation);

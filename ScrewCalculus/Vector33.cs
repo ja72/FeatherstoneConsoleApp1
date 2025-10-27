@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using Featherstone.VectorCalculus;
+using JA.VectorCalculus;
 
-namespace Featherstone.ScrewCalculus
+namespace JA.ScrewCalculus
 {
     /// <summary>
     /// Immutable double 3D vector using double precision.
@@ -35,6 +35,15 @@ namespace Featherstone.ScrewCalculus
             => new Vector33(twist.linear, twist.angular);   
         public static implicit operator Vector33(Wrench33 wrench)
             => new Vector33(wrench.linear, wrench.angular);   
+
+        public static Vector33 Twist(Vector3 value, Vector3 position, double pitch = 0)
+            => Twist33.At(value, position, pitch);
+        public static Vector33 Twist(Vector3 value)
+            => Twist33.Pure(value);
+        public static Vector33 Wrench(Vector3 value, Vector3 position, double pitch = 0)
+            => Wrench33.At(value, position, pitch);
+        public static Vector33 Wrench(Vector3 value)
+            => Wrench33.Pure(value);
 
         #endregion
 

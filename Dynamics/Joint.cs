@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Featherstone.ScrewCalculus;
-using Featherstone.VectorCalculus;
+using JA.ScrewCalculus;
+using JA.VectorCalculus;
 
-namespace Featherstone.Dynamics
+namespace JA.Dynamics
 {
     public enum JointType
     {
@@ -22,15 +22,18 @@ namespace Featherstone.Dynamics
 
     public class Joint : ITree<Joint>
     {
-        internal readonly Joint parent;
+        internal Joint parent;
         internal readonly List<Joint> children;
         internal readonly JointType type;
-        internal readonly Pose3 localPosition;
-        internal readonly Vector3 localAxis;
-        internal readonly double pitch;
+        internal Pose3 localPosition;
+        internal Vector3 localAxis;
+        internal double pitch;
 
         #region Factory
-        Joint(Joint parent, JointType type, Pose3 localPosition, Vector3 localAxis, double pitch = 0.0)
+        Joint(Joint parent, JointType type, Pose3 localPosition, Vector3 localAxis, double pitch)
+            : this(parent, type, localPosition, localAxis, pitch, MassProperties.Zero)
+        { }
+        Joint(Joint parent, JointType type, Pose3 localPosition, Vector3 localAxis, double pitch, MassProperties massProperties)
         {
             this.parent=parent;
             this.children=new List<Joint>();
@@ -38,6 +41,7 @@ namespace Featherstone.Dynamics
             this.localPosition=localPosition;
             this.localAxis=localAxis;
             this.pitch=type!=JointType.Prismatic ? pitch : double.PositiveInfinity;
+            this.MassProperties = massProperties;
             if (parent!=null)
             {
                 parent.children.Add(this);
@@ -47,27 +51,57 @@ namespace Featherstone.Dynamics
         public Joint AddScrew(Pose3 localPosition, Vector3 localAxis, double pitch)
             => new Joint(this, JointType.Screw, localPosition, localAxis, pitch);
         public Joint AddRevolute(Pose3 localPosition, Vector3 localAxis)
-            => new Joint(this, JointType.Revolute, localPosition, localAxis);
+            => new Joint(this, JointType.Revolute, localPosition, localAxis, 0);
         public Joint AddPrismatic(Pose3 localPosition, Vector3 localAxis)
-            => new Joint(this, JointType.Prismatic, localPosition, localAxis);
+            => new Joint(this, JointType.Prismatic, localPosition, localAxis, double.PositiveInfinity);
         public static Joint NewScrew(Pose3 localPosition, Vector3 localAxis, double pitch)
             => new Joint(null, JointType.Screw, localPosition, localAxis, pitch);
         public static Joint NewRevolute(Pose3 localPosition, Vector3 localAxis)
-            => new Joint(null, JointType.Revolute, localPosition, localAxis);
+            => new Joint(null, JointType.Revolute, localPosition, localAxis, 0);
         public static Joint NewPrismatic(Pose3 localPosition, Vector3 localAxis)
-            => new Joint(null, JointType.Prismatic, localPosition, localAxis);
+            => new Joint(null, JointType.Prismatic, localPosition, localAxis, double.PositiveInfinity);
         #endregion
 
         #region Properties
-        public Joint Parent => parent;
+        public Joint Parent
+        {
+            get => parent;
+            set
+            {
+                parent?.children.Remove(this);
+                parent = value;
+                parent?.children.Add(this);
+            }
+        }
         public IReadOnlyList<Joint> Children => children;
         public bool IsRoot => parent==null;
         public bool IsLeaf => children.Count==0;
         public JointType Type => type;
-        public Pose3 LocalPosition => LocalPosition;
-        public Vector3 LocalAxis => localAxis;
-        public double Pitch => pitch;
-
+        public Pose3 LocalPosition
+        {
+            get => LocalPosition;
+            set => LocalPosition=value;
+        }
+        public Vector3 LocalAxis
+        {
+            get => localAxis;
+            set => localAxis=value;
+        }
+        public double Pitch
+        {
+            get => pitch;
+            set => pitch=value;
+        }
+        public MassProperties MassProperties { get; private set; }
+        public void ZeroMassProperties() => MassProperties = MassProperties.Zero;
+        public void AddMassProperties(MassProperties additionalMassProperties)
+        {
+            MassProperties += additionalMassProperties;
+        }
+        public void SubMassProperties(MassProperties additionalMassProperties)
+        {
+            MassProperties -= additionalMassProperties;
+        }
 
         protected void FillAncestors(ref List<Joint> list)
         {
@@ -133,7 +167,7 @@ namespace Featherstone.Dynamics
                     return Twist33.Pure(axis);
                 }
                 default:
-                    throw new NotSupportedException("Unknown joint type.");
+                throw new NotSupportedException("Unknown joint type.");
             }
         }
         #endregion

@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{404EFADD-5450-4837-BCF8-A8574F2B9E75}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Featherstone</RootNamespace>
+    <RootNamespace>JA</RootNamespace>
     <AssemblyName>FeatherstoneConsoleApp1</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -42,9 +42,11 @@
       <HintPath>packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
     </Reference>
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
     </Reference>
@@ -53,11 +55,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions.cs" />
     <Compile Include="Dynamics\Dynamics.cs" />
     <Compile Include="Dynamics\Joint.cs" />
-    <Compile Include="Dynamics\RigidBody.cs" />
+    <Compile Include="Dynamics\MassProperties.cs" />
+    <Compile Include="Geometry\Circle.cs" />
+    <Compile Include="Geometry\LineSegment.cs" />
+    <Compile Include="Geometry\Mesh.cs" />
+    <Compile Include="Geometry\Polygon.cs" />
+    <Compile Include="Geometry\Pose.cs" />
+    <Compile Include="Geometry\Triangle.cs" />
+    <Compile Include="Materials.cs" />
     <Compile Include="Dynamics\ShapeMMOI.cs" />
-    <Compile Include="Dynamics\TreeSystem.cs" />
+    <Compile Include="Dynamics\World.cs" />
+    <Compile Include="Units.cs" />
     <Compile Include="ITree.cs" />
     <Compile Include="ScrewCalculus\Matrix33.cs" />
     <Compile Include="ScrewCalculus\Twist33.cs" />

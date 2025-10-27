@@ -4,29 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Featherstone.VectorCalculus;
-using Featherstone.ScrewCalculus;
-using Featherstone.Dynamics;
+using JA.VectorCalculus;
+using JA.ScrewCalculus;
+using JA.Dynamics;
 
-namespace Featherstone
+namespace JA
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            TreeSystem sys = new TreeSystem();
-            var L = 1.0*Vector3.UnitX;
-            var Ic = ShapeMMOI.Box(1.0, 1.0, 1.0, 1.0);
-            var body = new RigidBody(1.0, Ic, L/2);
+            World sys = new World(-10*Vector3.UnitY);
+            var steel = Material.Library(MaterialSpec.Steel);
+            float L = 1.0f, m = 1.0f;
+            var box = MassProperties.Box(steel, L, L/100, L/100).WithMass(m);
             var joint = Joint.NewRevolute(Vector3.Zero, Vector3.UnitZ);
-
-            int body_idx = sys.AddRigidBody(body);            
-
-            int n = 6;
-            for (int i = 0; i<n; i++)
-            {
-                sys.AddJoint(i-1, body_idx, joint);
-            }
+            joint.AddMassProperties(box.At(Vector3.UnitX * L/2));
         }
     }
 }

@@ -7,22 +7,24 @@ using System.Text;
 using System.Threading.Tasks;
 
 using JA.Geometry;
+using JA.LinearAlgebra.ScrewCalculus;
+using JA.LinearAlgebra.VectorCalculus;
 
 namespace JA.Dynamics
 {
-    using Vector3 = JA.VectorCalculus.Vector3;
-    using Matrix3 = JA.VectorCalculus.Matrix3;
-    using Quaternion3 = JA.VectorCalculus.Quaternion3;
-    using Pose3 = JA.VectorCalculus.Pose3;
-    using Vector33 = JA.ScrewCalculus.Vector33;
-    using Matrix33 = JA.ScrewCalculus.Matrix33;
+    using Vector3 = Vector3;
+    using Matrix3 = Matrix3;
+    using Quaternion3 = Quaternion3;
+    using Pose3 = Pose3;
+    using Vector33 = Vector33;
+    using Matrix33 = Matrix33;
 
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public readonly struct MassProperties :
         ICanChangeUnits<MassProperties>,
         IEquatable<MassProperties>
     {
-        public static readonly MassProperties Zero = new MassProperties(UnitSystem.SI, 0, Matrix3.Zero, Vector3.Zero);
+        public static readonly MassProperties Zero = new MassProperties(UnitSystem.MKS, 0, Matrix3.Zero, Vector3.Zero);
         readonly (float mass, Matrix3 mmoi, Vector3 cg) data;
         internal (float mass, Matrix3 mmoi, Vector3 cg) Data => data;
 
@@ -33,7 +35,7 @@ namespace JA.Dynamics
             this.Units = units;
             this.data = data;
         }
-        public static UnitSystem DefaultUnits { get; } = UnitSystem.SI;
+        public static UnitSystem DefaultUnits { get; } = UnitSystem.MKS;
         public static MassProperties Empty { get; } = new MassProperties(DefaultUnits, 0.0f, Matrix3.Scalar(0.0f), Vector3.Zero);
         public static MassProperties Default { get; } = new MassProperties(DefaultUnits, 1.0f, Matrix3.Scalar(1.0f), Vector3.Zero);
         public MassProperties WithMass(float mass) 
@@ -216,7 +218,13 @@ namespace JA.Dynamics
 
         #region Formatting
         public override string ToString()
-            => $"Body(Units={Units}, Mass={Mass:g3}, MMOI={MMoi:g3}, CG={CG:g3})";
+        {
+            if (MMoi.IsDIagonal)
+            {
+                return $"MassProp(Units={Units}, Mass={Mass:g3}, MMOI={MMoi.Diagonals():g3}, CG={CG:g3})";
+            }
+            return $"MassProp(Units={Units}, Mass={Mass:g3}, MMOI={MMoi:g3}, CG={CG:g3})";
+        }
 
         #endregion
 
@@ -224,10 +232,16 @@ namespace JA.Dynamics
         public MassProperties ConvertTo(UnitSystem target)
         {
             if (Units == target) return this;
+
+            float f_mass = Unit.Mass.Convert(Units, target);
+            float f_mmoi = Unit.MassMomentOfInertia.Convert(Units, target);
+            float f_len = Unit.Length.Convert(Units, target);
+
             var copy = (
-                Unit.Mass.Convert(Units, target)*data.mass,
-                Unit.MassMomentOfInertia.Convert(Units, target) * data.mmoi,
-                Unit.Length.Convert(Units, target) * data.cg);
+                f_mass * data.mass,
+                f_mmoi * data.mmoi,
+                f_len * data.cg);
+
             return new MassProperties(target, copy);
         }
         #endregion

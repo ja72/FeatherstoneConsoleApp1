@@ -1,15 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.VectorCalculus;
+using JA.LinearAlgebra.VectorCalculus;
 
-namespace JA.ScrewCalculus
+
+namespace JA.LinearAlgebra.ScrewCalculus
 {
+    
+    using Vector3 = VectorCalculus.Vector3;
+
+    public enum ScrewCoordinates
+    {
+        [Description("screw=(moment vector, direction vector)")]
+        Axis,   
+        [Description("screw=(direction vector, moment vector)")]
+        Ray,    
+    }
+
     /// <summary>
     /// Immutable double 3D vector using double precision.
     /// </summary>
@@ -56,6 +69,13 @@ namespace JA.ScrewCalculus
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Dot(Vector33 a, Vector33 b) 
             => Vector3.Dot(a.v1, b.v1)+Vector3.Dot(a.v2, b.v2);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix33 Outer(Vector33 a, Vector33 b)
+            => new Matrix33(
+                Vector3.Outer(a.v1, b.v1), Vector3.Outer(a.v1, b.v2),
+                Vector3.Outer(a.v2, b.v1), Vector3.Outer(a.v2, b.v2));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector33 Negate(Vector33 a)
             => new Vector33(
@@ -91,11 +111,13 @@ namespace JA.ScrewCalculus
         public static Vector33 operator *(double f, Vector33 a) => Scale(a, f);
         public static Vector33 operator *(Vector33 a, double f) => Scale(a, f);
         public static Vector33 operator /(Vector33 a, double d) => Divide(a, d);
+        public static double operator *(Vector33 a, Vector33 b) => Dot(a, b);
+        public static Matrix33 operator %(Vector33 a, Vector33 b) => Outer(a, b);
         #endregion
 
         #region IEquatable Members
         /// <summary>
-        /// Equality overrides from <see cref="System.Object"/>
+        /// Equality overrides from <see cref="object"/>
         /// </summary>
         /// <param name="obj">The object to compare this with</param>
         /// <returns>False if object is a different type, otherwise it calls <code>Equals(Vector33)</code></returns>
@@ -124,8 +146,8 @@ namespace JA.ScrewCalculus
             unchecked
             {
                 int hc = -1817952719;
-                hc=( -1521134295 )*hc+v1.GetHashCode();
-                hc=( -1521134295 )*hc+v2.GetHashCode();
+                hc= -1521134295 *hc+v1.GetHashCode();
+                hc= -1521134295 *hc+v2.GetHashCode();
                 return hc;
             }
         }
@@ -137,17 +159,9 @@ namespace JA.ScrewCalculus
         #endregion
 
         #region Collection
-        public unsafe ReadOnlySpan<double> AsSpan()
-        {
-            fixed (double* ptr = &v1.x)
-            {
-                return new ReadOnlySpan<double>(ptr, Size);
-            }
-        }
-
-        public double[] ToArray() => AsSpan().ToArray(); 
+        public static implicit operator double[](Vector33 @this) => @this.ToArray();
+        public double[] ToArray() => new double[] { v1.x, v1.y, v1.z, v2.x, v2.y, v2.z };
         #endregion
-
     }
 
 

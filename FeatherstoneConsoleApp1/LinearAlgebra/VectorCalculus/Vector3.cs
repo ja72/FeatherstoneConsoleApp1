@@ -2,7 +2,9 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace JA.VectorCalculus
+using JA.LinearAlgebra.ScrewCalculus;
+
+namespace JA.LinearAlgebra.VectorCalculus
 {
     /// <summary>
     /// Immutable 3D vector using double precision.
@@ -50,6 +52,7 @@ namespace JA.VectorCalculus
         public static Vector3 UnitX { get; } = new Vector3(1.0, 0.0, 0.0);
         public static Vector3 UnitY { get; } = new Vector3(0.0, 1.0, 0.0);
         public static Vector3 UnitZ { get; } = new Vector3(0.0, 0.0, 1.0);
+
         #endregion
 
         #region Properties
@@ -61,6 +64,11 @@ namespace JA.VectorCalculus
         public double Y => this.y;
 
         public double Z => this.z;
+
+        public bool IsZero => x==0.0&&y==0.0&&z==0.0;
+        public bool IsUnitX => x==1.0&&y==0.0&&z==0.0;
+        public bool IsUnitY => x==0.0&&y==1.0&&z==0.0;
+        public bool IsUnitZ => x==0.0&&y==0.0&&z==1.0;
         #endregion
 
         #region Algebra
@@ -68,7 +76,7 @@ namespace JA.VectorCalculus
 
         public bool TryNormalize(out Vector3 result)
         {
-            var len = this.MagnitudeSquared;
+            var len = MagnitudeSquared;
             if (len==0.0)
             {
                 result=Zero;
@@ -90,15 +98,18 @@ namespace JA.VectorCalculus
             return v/len;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Dot(Vector3 a, Vector3 b) => a.X*b.X+a.Y*b.Y+a.Z*b.Z;
-        public static Matrix3 Outer(Vector3 a, Vector3 b) =>
-            new Matrix3(
+        public static double Dot(Vector3 a, Vector3 b) 
+            => a.X*b.X+a.Y*b.Y+a.Z*b.Z;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 Outer(Vector3 a, Vector3 b) 
+            => new Matrix3(
                 a.x*b.x, a.x*b.y, a.x*b.z,
                 a.y*b.x, a.y*b.y, a.y*b.z,
                 a.z*b.x, a.z*b.y, a.z*b.z
             );
-        public static Vector3 Cross(Vector3 a, Vector3 b) =>
-            new Vector3(
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 Cross(Vector3 a, Vector3 b) 
+            => new Vector3(
                 a.y*b.z-a.z*b.y,
                 a.z*b.x-a.x*b.z,
                 a.x*b.y-a.y*b.x
@@ -137,6 +148,8 @@ namespace JA.VectorCalculus
         public static Vector3 operator *(Vector3 v, double s) => Scale(v, s);
         public static Vector3 operator *(double s, Vector3 v) => v*s;
         public static Vector3 operator /(Vector3 v, double s) => Divide(v, s);
+        public static double operator *(Vector3 a, Vector3 b) => Dot(a, b);
+        public static Matrix3 operator %(Vector3 a, Vector3 b) => Outer(a, b);
         #endregion
 
         #region IEquatable Members
@@ -148,9 +161,9 @@ namespace JA.VectorCalculus
             unchecked
             {
                 int hc = -1817952719;
-                hc=( -1521134295 )*hc+X.GetHashCode();
-                hc=( -1521134295 )*hc+Y.GetHashCode();
-                hc=( -1521134295 )*hc+Z.GetHashCode();
+                hc= -1521134295 *hc+X.GetHashCode();
+                hc= -1521134295 *hc+Y.GetHashCode();
+                hc= -1521134295 *hc+Z.GetHashCode();
                 return hc;
             }
         }
@@ -165,15 +178,8 @@ namespace JA.VectorCalculus
         #endregion
 
         #region Collection
-        public unsafe ReadOnlySpan<double> AsSpan()
-        {
-            fixed (double* ptr = &x)
-            {
-                return new ReadOnlySpan<double>(ptr, Size);
-            }
-        }
-
-        public double[] ToArray() => AsSpan().ToArray();
+        public static implicit operator double[](Vector3 vector) => vector.ToArray();
+        public double[] ToArray() => new[] { x, y, z };
         #endregion
     }
 }

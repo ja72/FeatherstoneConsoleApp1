@@ -1,14 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace JA
 {
     public enum UnitSystem
     {
-        SI,
+        [Description("Meter-Kilogram-Second")]
+        MKS,
+        [Description("Centimeter-Gram-Second")]
+        CMGS,
+        [Description("Centimeter-Kilogram-Second")]
+        CMKS,
+        [Description("Millimeter-Gram-Second")]
+        MMGS,
+        [Description("Millimeter-Kilogram-Second")] 
         MMKS,
+        [Description("Inch-Pound-Second")] 
         IPS,
+        [Description("Foot-Pound-Second")] 
         FPS,
     }
     public interface IHasUnits
@@ -287,7 +298,6 @@ namespace JA
                 return Argument.IsBase ? $"{Argument}^{Exponent}" : $"({Argument})^{Exponent}";
             }
         }
-
         class ComplexUnit : Unit
         {
             public ComplexUnit(params Unit[] parts)
@@ -456,9 +466,13 @@ namespace JA
         {
             switch (units)
             {
-                case UnitSystem.SI:
+                case UnitSystem.MKS:
                     return 1f;
+                case UnitSystem.CMKS:
+                case UnitSystem.CMGS:
+                    return 0.01f;
                 case UnitSystem.MMKS:
+                case UnitSystem.MMGS:
                     return 0.001f;
                 case UnitSystem.IPS:
                     return 0.0254f;
@@ -472,9 +486,13 @@ namespace JA
         {
             switch (units)
             {
-                case UnitSystem.SI:
+                case UnitSystem.MKS:
                 case UnitSystem.MMKS:
+                case UnitSystem.CMKS:
                     return 1f;
+                case UnitSystem.MMGS:
+                case UnitSystem.CMGS:
+                    return 0.001f;
                 case UnitSystem.IPS:
                 case UnitSystem.FPS:
                     return 0.4535924f;
@@ -486,9 +504,16 @@ namespace JA
         {
             switch (units)
             {
-                case UnitSystem.SI:
-                case UnitSystem.MMKS:
+                case UnitSystem.MKS:
                     return 1f;
+                case UnitSystem.CMKS:
+                    return 100f;
+                case UnitSystem.MMKS:
+                    return 1000f;
+                case UnitSystem.CMGS:
+                    return 100000f;
+                case UnitSystem.MMGS:
+                    return 1000000f;
                 case UnitSystem.IPS:
                 case UnitSystem.FPS:
                     return 4.4482216f;
@@ -500,8 +525,12 @@ namespace JA
         {
             switch (units)
             {
-                case UnitSystem.SI:
+                case UnitSystem.MKS:
+                    return 1f;
                 case UnitSystem.MMKS:
+                case UnitSystem.MMGS:
+                case UnitSystem.CMKS:
+                case UnitSystem.CMGS:
                     return 1f;
                 case UnitSystem.IPS:
                 case UnitSystem.FPS:
@@ -516,13 +545,33 @@ namespace JA
     }
     public static class UnitSystemExtensions
     {
+        public static float GetFactor(this UnitType type, UnitSystem from, UnitSystem target)
+        {
+            var n = Unit.GetFactor(type, target);
+            var d = Unit.GetFactor(type, from);
+            return n/d;
+        }
+        public static float GetFactor(this UnitSystem units, UnitType type, UnitSystem target)
+        {
+            return GetFactor(type, units, target);
+        }
+
+        public static float GetFactor(this IHasUnits hasUnits, UnitType type, UnitSystem target)
+        {
+            return GetFactor(type, hasUnits.Units, target);
+        }
+
         public static bool IsConsistent(this UnitSystem units)
         {
             switch (units)
             {
-                case UnitSystem.SI:
+                case UnitSystem.MKS:
                     return true;
                 case UnitSystem.MMKS:
+                case UnitSystem.MMGS:
+                case UnitSystem.CMKS:
+                case UnitSystem.CMGS:
+                    return false;
                 case UnitSystem.IPS:
                 case UnitSystem.FPS:
                     return false;
@@ -534,8 +583,11 @@ namespace JA
         {
             switch (units)
             {
-                case UnitSystem.SI:
+                case UnitSystem.MKS:
                 case UnitSystem.MMKS:
+                case UnitSystem.MMGS:
+                case UnitSystem.CMKS:
+                case UnitSystem.CMGS:
                     return true;
                 case UnitSystem.IPS:
                 case UnitSystem.FPS:
@@ -544,14 +596,18 @@ namespace JA
                     throw new NotSupportedException($"Unknown unit system {units}");
             }
         }
-        public static float GravityFactor(this UnitSystem units)
+        public static float EarthGravity(this UnitSystem units)
         {
             switch (units)
             {
-                case UnitSystem.SI:
-                    return 1;
+                case UnitSystem.MKS:
+                    return 9.8065f;
+                case UnitSystem.CMGS:
+                case UnitSystem.CMKS:
+                    return 980.65f;
                 case UnitSystem.MMKS:
-                    return 1000;
+                case UnitSystem.MMGS:
+                    return 9806.5f;
                 case UnitSystem.IPS:
                     return 386.0885827f;
                 case UnitSystem.FPS:

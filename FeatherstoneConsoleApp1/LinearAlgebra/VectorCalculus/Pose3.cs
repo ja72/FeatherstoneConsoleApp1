@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JA.VectorCalculus
+namespace JA.LinearAlgebra.VectorCalculus
 {
-    public readonly struct Pose3
+    public readonly struct Pose3 
     {
         internal readonly Vector3 position;
         internal readonly Quaternion3 orientation;
@@ -14,11 +14,11 @@ namespace JA.VectorCalculus
         #region Factory
         Pose3(Vector3 position, Quaternion3 orientation)
         {
-            this.position = position;
+            this.position    = position;
             this.orientation = orientation;
         }
-        public static implicit operator Pose3(Vector3 position) => Pose3.At(position);
-        public static implicit operator Pose3(Quaternion3 orientation) => Pose3.About(orientation);
+        public static implicit operator Pose3(Vector3 position) => At(position);
+        public static implicit operator Pose3(Quaternion3 orientation) => About(orientation);
         public static implicit operator Vector3(Pose3 pose) => pose.position;
         public static implicit operator Quaternion3(Pose3 pose) => pose.orientation;
         public static Pose3 Origin { get; } = new Pose3(Vector3.Zero, Quaternion3.Identity);
@@ -30,6 +30,11 @@ namespace JA.VectorCalculus
         #region Properties
         public Vector3 Position => this.position;
         public Quaternion3 Orientation => this.orientation;
+
+        public bool IsRotationOnly => this.position.IsZero;
+        public bool IsTranslationOnly => this.orientation.Equals(Quaternion3.Identity);
+        public bool IsIdentity => IsRotationOnly && IsTranslationOnly;
+
         #endregion
 
         #region Algebra
@@ -58,5 +63,22 @@ namespace JA.VectorCalculus
         public static Pose3 operator -(Pose3 a, Pose3 b) => Subtract(a, b);
         public static Pose3 operator + (Pose3 a, Vector3 b) => Add(a, At(b));
         #endregion
+
+        #region Formatting
+        public override string ToString()
+        {
+            if(IsTranslationOnly)
+            {
+                return $"Pose3(Position: {position})";
+            }
+            if(IsRotationOnly)
+            {
+                return $"Pose3(Orientation: {orientation})";
+            }
+            return $"Pose3(Position: {position}, Orientation: {orientation})";
+        }
+
+        #endregion
+
     }
 }

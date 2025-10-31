@@ -1,134 +1,50 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-using JA.ScrewCalculus;
-using JA.VectorCalculus;
+using JA.LinearAlgebra.ScrewCalculus;
+using JA.LinearAlgebra.VectorCalculus;
 
 namespace JA.Dynamics
 {
-    public class World
-    {
-        internal Vector3 gravity;
-        internal readonly List<Joint> rootJoints;
-
-        #region Factor
-        public World(Vector3 gee)
-        {
-            this.gravity=gee;
-            this.rootJoints=new List<Joint>();
-        }
-        #endregion
-
-        #region Property
-        public Vector3 Gravity { get => gravity; set => gravity=value; }
-        public IReadOnlyList<Joint> RootJoints => rootJoints;
-        #endregion
-
-        #region Structure
-
-        public Joint NewScrew(Pose3 localPosition, Vector3 localAxis, double pitch)
-        {
-            var joint = Joint.NewScrew(localPosition, localAxis, pitch);
-            rootJoints.Add(joint);
-            return joint;
-        }
-
-        public Joint NewRevolute(Pose3 localPosition, Vector3 localAxis)
-        {
-            var joint = Joint.NewRevolute(localPosition, localAxis);
-            rootJoints.Add(joint);
-            return joint;
-        }
-
-        public Joint NewPrismatic(Pose3 localPosition, Vector3 localAxis)
-        {
-            var joint = Joint.NewPrismatic(localPosition, localAxis);
-            rootJoints.Add(joint);
-            return joint;
-        }
-
-        public List<Joint> GetAllJoints()
-        {
-            var allJoints=new List<Joint>();
-            foreach (var joint in rootJoints)
-            {
-                TraverseJoint(joint, ref allJoints);
-            }
-            return allJoints;
-        }
-
-        void TraverseJoint(Joint joint, ref List<Joint> joints)
-        {
-            joints.Add(joint);
-            foreach (var child in joint.Children)
-            {
-                TraverseJoint(child, ref joints);
-            }
-        }
-
-        internal int[] GetParents(Joint[] allJoints)
-        {
-            int n = allJoints.Length;
-            int[] parents = new int[n];
-            for (int i = 0; i<n; i++)
-            {
-                var joint = allJoints[i];
-                if (joint.Parent==null)
-                {
-                    parents[i]=-1;
-                }
-                else
-                {
-                    parents[i]=Array.IndexOf(allJoints, joint.Parent);
-                }
-            }
-            return parents;
-        }
-
-        internal int[][] GetChildren(Joint[] allJoints)
-        {
-            int n = allJoints.Length;
-            int[][] children = new int[n][];
-            for (int i = 0; i<n; i++)
-            {
-                var joint = allJoints[i];
-                children[i]=new int[joint.Children.Count];
-                for (int j = 0; j<joint.Children.Count; j++)
-                {
-                    children[i][j]=Array.IndexOf(allJoints, joint.Children[j]);
-                }
-            }
-            return children;
-        }
-
-        #endregion
-
-        #region Mechanics
-        public Simulation ToSimulation()
-        {
-            return new Simulation(this);
-        }
-
-
-        #endregion
-    }
     public class Simulation
     {
         readonly Vector3 gravity;
         readonly Joint[] joints;
         readonly int[] parents;
         readonly int[][] childrens;
+        
+        public Vector3 Gravity => gravity;
+        public Joint[] Joints => joints;
+        public int[] Parents => parents;
+        public int[][] Childrens => childrens;
+        public UnitSystem Units { get; }
 
         public Simulation(World world)
         {
-            gravity=world.gravity;
+            // Set everything to MKS for simulation
+            this.Units = UnitSystem.MKS;
+
+            float f_acc = Unit.Acceleration.Convert(world.units, Units);
+
+            gravity= f_acc * world.gravity;
+
             joints=world.GetAllJoints().ToArray();
             parents=world.GetParents(joints);
             childrens=world.GetChildren(joints);
+
+            foreach (var item in joints)
+            {
+                item.ConvertTo(Units); 
+            }
         }
+
+        #region Formatting
+        public override string ToString()
+        {
+            return $"Simulation(Units={Units}, Joints={Joints.Length}, Gravity={Gravity})";
+        }
+        #endregion
+
         public double[] CalculateAccelerations(double[] q, double[] qp, double[] tau)
         {
             // Placeholder for dynamics calculation

@@ -2,11 +2,12 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using JA.VectorCalculus;
 
-
-namespace JA.ScrewCalculus
+namespace JA.LinearAlgebra.ScrewCalculus
 {
+    using Vector3 = JA.LinearAlgebra.VectorCalculus.Vector3;
+    using Matrix3 = JA.LinearAlgebra.VectorCalculus.Matrix3;
+
     /// <summary>
     /// Immutable 2x2 block matrix where each block is a 3x3 Matrix3.
     /// Logical layout:
@@ -159,10 +160,10 @@ namespace JA.ScrewCalculus
             unchecked
             {
                 int hc = -1521134295;
-                hc = (hc * -1521134295) + a11.GetHashCode();
-                hc = (hc * -1521134295) + a12.GetHashCode();
-                hc = (hc * -1521134295) + a21.GetHashCode();
-                hc = (hc * -1521134295) + a22.GetHashCode();
+                hc = hc * -1521134295 + a11.GetHashCode();
+                hc = hc * -1521134295 + a12.GetHashCode();
+                hc = hc * -1521134295 + a21.GetHashCode();
+                hc = hc * -1521134295 + a22.GetHashCode();
                 return hc;
             }
         }
@@ -177,21 +178,31 @@ namespace JA.ScrewCalculus
         #endregion
 
         #region  Collection
-        public unsafe ReadOnlySpan<double> AsSpan()
-        {
-            fixed (double* ptr = &a11.m11)
-            {
-                return new ReadOnlySpan<double>(ptr, Size);
-            }
-        }
+        public static implicit operator double[](Matrix33 @this) => @this.ToArray();
 
         /// <summary>
         /// Flatten to a 6x6 row-major array of 36 doubles.
         /// Order: block rows then inner rows.
         /// </summary>
-        public double[] ToArray() => AsSpan().ToArray();
+        public double[] ToArray() => new double[] {
+            a11.m11, a11.m12, a11.m13, a12.m11, a12.m12, a12.m13,
+            a11.m21, a11.m22, a11.m23, a12.m21, a12.m22, a12.m23,
+            a11.m31, a11.m32, a11.m33, a12.m31, a12.m32, a12.m33,
+            a21.m11, a21.m12, a21.m13, a22.m11, a22.m12, a22.m13,
+            a21.m21, a21.m22, a21.m23, a22.m21, a22.m22, a22.m23,
+            a21.m31, a21.m32, a21.m33, a22.m31, a22.m32, a22.m33,
+        };
 
+        public double[,] ToArray2() => new double[,] {
+            {a11.m11, a11.m12, a11.m13, a12.m11, a12.m12, a12.m13 },
+            {a11.m21, a11.m22, a11.m23, a12.m21, a12.m22, a12.m23 },
+            {a11.m31, a11.m32, a11.m33, a12.m31, a12.m32, a12.m33 },
+            {a21.m11, a21.m12, a21.m13, a22.m11, a22.m12, a22.m13 },
+            {a21.m21, a21.m22, a21.m23, a22.m21, a22.m22, a22.m23 },
+            {a21.m31, a21.m32, a21.m33, a22.m31, a22.m32, a22.m33 },
+        };
 
+        public double[][] ToJaggedArray() => Factory.CreateArray2(6, 6, ToArray());
         #endregion
 
     }

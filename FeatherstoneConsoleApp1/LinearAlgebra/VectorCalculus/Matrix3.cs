@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace JA.VectorCalculus
+namespace JA.LinearAlgebra.VectorCalculus
 {
     /// <summary>
     /// Immutable 3x3 matrix using double precision.
@@ -42,7 +42,7 @@ namespace JA.VectorCalculus
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 Symmetric(
             double m11, double m12, double m13,
-                        double m22, double m23, 
+                        double m22, double m23,
                                     double m33)
         {
             return new Matrix3(
@@ -114,7 +114,7 @@ namespace JA.VectorCalculus
 
         public static Matrix3 Rotation(Vector3 axis, double angle, bool inverse = false)
         {
-            if(axis.MagnitudeSquared==0.0)
+            if (axis.MagnitudeSquared==0.0)
             {
                 throw new ArgumentException("Rotation axis must be non-zero.", nameof(axis));
             }
@@ -122,14 +122,14 @@ namespace JA.VectorCalculus
             {
                 return Identity;
             }
-            if(inverse)
+            if (inverse)
             {
                 angle=-angle;
             }
             double cos = Math.Cos(angle), sin = Math.Sin(angle);
             Matrix3 vx = axis.CrossOp();
             Matrix3 vxx = axis.MomentTensor();
-            return Identity+vx*sin+vxx*(cos-1);
+            return Identity+vx*sin+vxx*( cos-1 );
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 FromQuaternion(Quaternion3 q)
@@ -192,8 +192,24 @@ namespace JA.VectorCalculus
         public double M23 => m23;
         public double M31 => m31;
         public double M32 => m32;
-        public double M33 => m33; 
+        public double M33 => m33;
 
+        public bool IsDIagonal =>
+            m12==0.0&&m13==0.0&&
+            m21==0.0&&m23==0.0&&
+            m31==0.0&&m32==0.0;
+        public bool IsSymmetric =>
+            m12==m21&&
+            m13==m31&&
+            m23==m32;
+        public bool IsSkewSymmetric =>
+            m12==-m21&&
+            m13==-m31&&
+            m23==-m32;
+        public bool IsZero =>
+            m11==0.0&&m12==0.0&&m13==0.0&&
+            m21==0.0&&m22==0.0&&m23==0.0&&
+            m31==0.0&&m32==0.0&&m33==0.0;
         public double this[int row, int column]
         {
             get
@@ -216,12 +232,13 @@ namespace JA.VectorCalculus
                 }
             }
         }
-        public double Trace() =>  Trace(this);
+        public double Trace() => Trace(this);
         public double Determinant() => Determinant(this);
+        public Vector3 Diagonals() => new Vector3(m11, m22, m33);
         public Matrix3 Transpose() => Transpose(this);
-        public Matrix3 ToDiagonal() => Matrix3.Diagonal(m11, m22, m33);
-        public Matrix3 ToSymmetric() => (this+Transpose(this))/2.0;
-        public Matrix3 ToSkewSymmetric() => (this-Transpose(this))/2.0;
+        public Matrix3 ToDiagonal() => Diagonal(m11, m22, m33);
+        public Matrix3 ToSymmetric() => ( this+Transpose(this) )/2.0;
+        public Matrix3 ToSkewSymmetric() => ( this-Transpose(this) )/2.0;
         public Matrix3 ToUpperTriangular(bool includeDiagonal = true) =>
             includeDiagonal ?
             new Matrix3(
@@ -361,7 +378,7 @@ namespace JA.VectorCalculus
         }
         public bool TrySolve(Vector3 b, out Vector3 result)
         {
-            if (!this.TryInvert(out var inv))
+            if (!TryInvert(out var inv))
             {
                 result=Vector3.Zero;
                 return false;
@@ -383,15 +400,15 @@ namespace JA.VectorCalculus
             unchecked
             {
                 int hc = -1817952719;
-                hc=( -1521134295 )*hc+m11.GetHashCode();
-                hc=( -1521134295 )*hc+m12.GetHashCode();
-                hc=( -1521134295 )*hc+m13.GetHashCode();
-                hc=( -1521134295 )*hc+m21.GetHashCode();
-                hc=( -1521134295 )*hc+m22.GetHashCode();
-                hc=( -1521134295 )*hc+m23.GetHashCode();
-                hc=( -1521134295 )*hc+m31.GetHashCode();
-                hc=( -1521134295 )*hc+m32.GetHashCode();
-                hc=( -1521134295 )*hc+m33.GetHashCode();
+                hc=-1521134295*hc+m11.GetHashCode();
+                hc=-1521134295*hc+m12.GetHashCode();
+                hc=-1521134295*hc+m13.GetHashCode();
+                hc=-1521134295*hc+m21.GetHashCode();
+                hc=-1521134295*hc+m22.GetHashCode();
+                hc=-1521134295*hc+m23.GetHashCode();
+                hc=-1521134295*hc+m31.GetHashCode();
+                hc=-1521134295*hc+m32.GetHashCode();
+                hc=-1521134295*hc+m33.GetHashCode();
                 return hc;
             }
         }
@@ -413,22 +430,33 @@ namespace JA.VectorCalculus
 
         #region Formatting
         public override string ToString() =>
-            $"[{(float)m11}, {(float)m12}, {(float)m13}; {(float)m21}, {(float)m22}, {(float)m23}; {(float)m31}, {(float)m32}, {(float)m33}]"; 
+            $"[{(float)m11}, {(float)m12}, {(float)m13}; {(float)m21}, {(float)m22}, {(float)m23}; {(float)m31}, {(float)m32}, {(float)m33}]";
 
         #endregion
 
-        public unsafe ReadOnlySpan<double> AsSpan()
-        {
-            fixed (double* ptr = &m11)
-            {
-                return new ReadOnlySpan<double>(ptr, Size);
-            }
-        }
-
+        #region Collection
+        public static implicit operator double[](Matrix3 matrix) => matrix.ToArray();
+        public static implicit operator double[,](Matrix3 matrix) => matrix.ToArray2();
+        public static implicit operator double[][](Matrix3 matrix) => matrix.ToJaggedArray();
         /// <summary>
         /// Flatten to a 3x3 row-major array of 9 doubles.
         /// Order: block rows then inner rows.
         /// </summary>
-        public double[] ToArray() => AsSpan().ToArray();
+        public double[] ToArray() => new double[] {
+            m11, m12, m13,
+            m21, m22, m23,
+            m31, m32, m33 };
+
+        public double[,] ToArray2() => new double[,] {
+            { m11, m12, m13 },
+            { m21, m22, m23 },
+            { m31, m32, m33 } };
+
+        public double[][] ToJaggedArray() => new double[][] {
+            new double[] { m11, m12, m13 },
+            new double[] { m21, m22, m23 },
+            new double[] { m31, m32, m33 } };
+
+        #endregion
     }
 }

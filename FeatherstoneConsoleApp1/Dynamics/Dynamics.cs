@@ -5,8 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.ScrewCalculus;
-using JA.VectorCalculus;
+using JA.LinearAlgebra.ScrewCalculus;
+using JA.LinearAlgebra.VectorCalculus;
 
 namespace JA.Dynamics
 {

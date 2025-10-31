@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using JA.Dynamics;
+
 namespace JA
 {
     public interface ITree<T> where T : ITree<T>
@@ -14,6 +16,8 @@ namespace JA
         bool IsRoot { get; }
         bool IsLeaf { get; }
 
-        T[] GetMeAndAllAncestors();
+        R Traverse<R>(R initialValue, Func<T, R> operation);
+        void Traverse(Action<T> operation);
+
     }
 }

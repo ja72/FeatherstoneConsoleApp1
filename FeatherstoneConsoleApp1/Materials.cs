@@ -25,7 +25,7 @@ namespace JA
         }
         Material(MaterialSpec spec)
         {
-            Units = UnitSystem.SI;
+            Units = UnitSystem.MKS;
             Spec = spec;
             switch (spec)
             {

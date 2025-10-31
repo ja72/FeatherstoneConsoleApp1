@@ -36,25 +36,67 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
-    </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.0\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColorHSL.cs" />
+    <Compile Include="Dynamics\Simulation.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Dynamics\Dynamics.cs" />
     <Compile Include="Dynamics\Joint.cs" />
@@ -65,25 +107,32 @@
     <Compile Include="Geometry\Polygon.cs" />
     <Compile Include="Geometry\Pose.cs" />
     <Compile Include="Geometry\Triangle.cs" />
+    <Compile Include="LinearAlgebra\Factory.cs" />
+    <Compile Include="LinearAlgebra\JaggedMatrixLU.cs" />
+    <Compile Include="LinearAlgebra\LinearAlgebra.cs" />
+    <Compile Include="LinearAlgebra\Matrix.cs" />
+    <Compile Include="LinearAlgebra\ScrewCalculus\Matrix33.cs" />
+    <Compile Include="LinearAlgebra\ScrewCalculus\Twist33.cs" />
+    <Compile Include="LinearAlgebra\ScrewCalculus\Vector33.cs" />
+    <Compile Include="LinearAlgebra\ScrewCalculus\Wrench33.cs" />
+    <Compile Include="LinearAlgebra\StackedMatrix.cs" />
+    <Compile Include="LinearAlgebra\StackedVector.cs" />
+    <Compile Include="LinearAlgebra\Vector.cs" />
+    <Compile Include="LinearAlgebra\VectorCalculus\Matrix3.cs" />
+    <Compile Include="LinearAlgebra\VectorCalculus\Pose3.cs" />
+    <Compile Include="LinearAlgebra\VectorCalculus\Quaternion3.cs" />
+    <Compile Include="LinearAlgebra\VectorCalculus\Vector3.cs" />
     <Compile Include="Materials.cs" />
-    <Compile Include="Dynamics\ShapeMMOI.cs" />
     <Compile Include="Dynamics\World.cs" />
     <Compile Include="Units.cs" />
     <Compile Include="ITree.cs" />
-    <Compile Include="ScrewCalculus\Matrix33.cs" />
-    <Compile Include="ScrewCalculus\Twist33.cs" />
-    <Compile Include="ScrewCalculus\Vector33.cs" />
-    <Compile Include="ScrewCalculus\Wrench33.cs" />
-    <Compile Include="VectorCalculus\Matrix3.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VectorCalculus\Pose3.cs" />
-    <Compile Include="VectorCalculus\Quaternion3.cs" />
-    <Compile Include="VectorCalculus\Vector3.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

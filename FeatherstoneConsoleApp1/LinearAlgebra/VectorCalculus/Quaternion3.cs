@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace JA.VectorCalculus
+namespace JA.LinearAlgebra.VectorCalculus
 {
     /// <summary>
     /// Immutable quaternion using double precision. 
@@ -48,23 +48,17 @@ namespace JA.VectorCalculus
         public static Quaternion3 Conjugate(Quaternion3 q) => q.Conjugate();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryInverse(out Quaternion3 result)
-        {
-            var norm  = this.MagnitudeSquared;
-            if (norm == 0.0)
-            {
-                result = Zero;
-                return false;
-            }
-            var inv = 1.0 / norm;
-            result = new Quaternion3(this.w * inv, -this.x * inv, -this.y * inv, -this.z * inv);
-            return true;
-        }
+        public static double Dot(Quaternion3 a, Quaternion3 b)
+            => a.w*b.w+a.x*b.x+a.y*b.y+a.z*b.z;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Quaternion3 Add(Quaternion3 a, Quaternion3 b) => new Quaternion3(a.w + b.w, a.x + b.x, a.y + b.y, a.z + b.z);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Quaternion3 Subtract(Quaternion3 a, Quaternion3 b) => new Quaternion3(a.w - b.w, a.x - b.x, a.y - b.y, a.z - b.z);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion3 Inverse()
         {
-            if (!this.TryInverse(out var inv))
+            if (!TryInverse(out var inv))
                 throw new InvalidOperationException("Cannot invert a quaternion with zero magnitude.");
             return inv;
         }
@@ -82,11 +76,20 @@ namespace JA.VectorCalculus
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion3 Divide(Quaternion3 q, double d) => new Quaternion3(q.w / d, q.x / d, q.y / d, q.z / d);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion3 Add(Quaternion3 a, Quaternion3 b) => new Quaternion3(a.w + b.w, a.x + b.x, a.y + b.y, a.z + b.z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion3 Subtract(Quaternion3 a, Quaternion3 b) => new Quaternion3(a.w - b.w, a.x - b.x, a.y - b.y, a.z - b.z);
+        public bool TryInverse(out Quaternion3 result)
+        {
+            var norm  = MagnitudeSquared;
+            if (norm == 0.0)
+            {
+                result = Zero;
+                return false;
+            }
+            var inv = 1.0 / norm;
+            result = new Quaternion3(this.w * inv, -this.x * inv, -this.y * inv, -this.z * inv);
+            return true;
+        }
 
         /// <summary>
         /// Create a rotation quaternion from axis and angle (radians).
@@ -154,6 +157,8 @@ namespace JA.VectorCalculus
         public bool Equals(Quaternion3 other) =>
             w == other.w && x == other.x && y == other.y && z == other.z;
 
+        public static bool operator ==(Quaternion3 left, Quaternion3 right) => left.Equals(right);
+        public static bool operator !=(Quaternion3 left, Quaternion3 right) => !left.Equals(right); 
 
         public override bool Equals(object obj) => obj is Quaternion3 other && Equals(other);
 
@@ -162,10 +167,10 @@ namespace JA.VectorCalculus
             unchecked
             {
                 int hc = -1817952719;
-                hc=( -1521134295 )*hc+W.GetHashCode();
-                hc=( -1521134295 )*hc+X.GetHashCode();
-                hc=( -1521134295 )*hc+Y.GetHashCode();
-                hc=( -1521134295 )*hc+Z.GetHashCode();
+                hc= -1521134295 *hc+W.GetHashCode();
+                hc= -1521134295 *hc+X.GetHashCode();
+                hc= -1521134295 *hc+Y.GetHashCode();
+                hc= -1521134295 *hc+Z.GetHashCode();
                 return hc;
             }
         }
@@ -190,25 +195,23 @@ namespace JA.VectorCalculus
             dq = Scale(dq, deltaTime);
             return Add(this, dq).Normalize();
         }
+        #region Operators
         public static Quaternion3 operator +(Quaternion3 a, Quaternion3 b) => Add(a, b);
         public static Quaternion3 operator -(Quaternion3 a, Quaternion3 b) => Subtract(a, b);
         public static Quaternion3 operator *(Quaternion3 a, Quaternion3 b) => Multiply(a, b);
         public static Quaternion3 operator *(Quaternion3 q, double s) => Scale(q, s);
         public static Quaternion3 operator *(double s, Quaternion3 q) => Scale(q, s);
         public static Quaternion3 operator /(Quaternion3 q, double d) => Divide(q, d);
-        public static bool operator ==(Quaternion3 left, Quaternion3 right) => left.Equals(right);
-        public static bool operator !=(Quaternion3 left, Quaternion3 right) => !left.Equals(right);
 
-        public override string ToString() => $"({(float)W}, {(float)X}, {(float)Y}, {(float)Z})";
+        #endregion
 
-        public unsafe ReadOnlySpan<double> AsSpan()
-        {
-            fixed (double* ptr = &w)
-            {
-                return new ReadOnlySpan<double>(ptr, Size);
-            }
-        }
+        #region Formatting
+        public override string ToString() => $"({(float)w}, {(float)x}, {(float)y}, {(float)z})"; 
+        #endregion
 
-        public double[] ToArray() => AsSpan().ToArray();
+        #region Collection
+        public static implicit operator double[](Quaternion3 @this) => @this.ToArray();
+        public double[] ToArray() => new double[] { w, x, y, z }; 
+        #endregion
     }
 }

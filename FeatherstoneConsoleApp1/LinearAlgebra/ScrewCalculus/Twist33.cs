@@ -1,15 +1,23 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-using JA.VectorCalculus;
 
-namespace JA.ScrewCalculus
+namespace JA.LinearAlgebra.ScrewCalculus
 {
+
+    using Vector3 = VectorCalculus.Vector3;
+
     /// <summary>
     /// Immutable 3D screw to hold twists in (linear/angular) form.
     /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = ByteSize)]
     public readonly struct Twist33 : IEquatable<Twist33>
     {
+        internal const int Size = 6;
+        internal const int ByteSize = Size * sizeof(double);
+
         internal readonly Vector3 linear, angular;
 
         #region Factory
@@ -34,6 +42,7 @@ namespace JA.ScrewCalculus
         #endregion
 
         #region Properties
+        public ScrewCoordinates Coordinates { get => ScrewCoordinates.Axis; }
         public Vector3 Linear => this.linear;
         public Vector3 Angular => this.angular;
         public double Magnitude => this.angular.Magnitude;
@@ -43,6 +52,17 @@ namespace JA.ScrewCalculus
         #endregion
 
         #region Algebra
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Dot(Twist33 @this, Wrench33 other)
+            => Vector3.Dot(@this.linear, other.linear)+Vector3.Dot(@this.angular, other.angular);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix33 Outer(Twist33 a, Wrench33 b)
+            => new Matrix33(
+                Vector3.Outer(a.linear, b.linear), Vector3.Outer(a.linear, b.angular),
+                Vector3.Outer(a.angular, b.linear), Vector3.Outer(a.angular, b.angular));
+
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Twist33 Cross(Twist33 @this, Twist33 other)
         {
@@ -106,7 +126,7 @@ namespace JA.ScrewCalculus
 
         #region IEquatable Members
         /// <summary>
-        /// Equality overrides from <see cref="System.Object"/>
+        /// Equality overrides from <see cref="object"/>
         /// </summary>
         /// <param name="obj">The object to compare this with</param>
         /// <returns>False if object is a different type, otherwise it calls <code>Equals(Twist33)</code></returns>
@@ -136,8 +156,8 @@ namespace JA.ScrewCalculus
             unchecked
             {
                 int hc = -1817952719;
-                hc=( -1521134295 )*hc+linear.GetHashCode();
-                hc=( -1521134295 )*hc+angular.GetHashCode();
+                hc= -1521134295 *hc+linear.GetHashCode();
+                hc= -1521134295 *hc+angular.GetHashCode();
                 return hc;
             }
         }
@@ -147,5 +167,11 @@ namespace JA.ScrewCalculus
         #region Formatting
         public override string ToString() => $"T[{linear}|{angular}]";
         #endregion
+
+        #region Collection
+        public static implicit operator double[](Twist33 @this) => @this.ToArray();
+        public double[] ToArray() => new double[] { linear.x, linear.y, linear.z, angular.x, angular.y, angular.z };
+        #endregion
+
     }
 }

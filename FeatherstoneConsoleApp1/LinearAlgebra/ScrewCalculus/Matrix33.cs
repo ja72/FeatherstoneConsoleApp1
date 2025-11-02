@@ -40,11 +40,12 @@ namespace JA.LinearAlgebra.ScrewCalculus
             => new Matrix33(a11, a12, a21, a22);
         public static Matrix33 Diagonal(Matrix3 a11, Matrix3 a22)
             => new Matrix33(a11, Matrix3.Zero, Matrix3.Zero, a22);
-
+        public static Matrix33 Scalar(double scalar) => Diagonal( Matrix3.Scalar(scalar), Matrix3.Scalar(scalar));
         public static Matrix33 Zero { get; } = new Matrix33(Matrix3.Zero, Matrix3.Zero, Matrix3.Zero, Matrix3.Zero);
 
         public static Matrix33 Identity { get; } = new Matrix33(Matrix3.Identity, Matrix3.Zero, Matrix3.Zero, Matrix3.Identity);
 
+        public static implicit operator Matrix33(double scalar) => Scalar(scalar);
         #endregion
 
         #region Properties

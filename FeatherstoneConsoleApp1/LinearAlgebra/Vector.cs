@@ -91,7 +91,8 @@ namespace JA.LinearAlgebra
             }
         }
 
-
+        public Vector Slice(int offset, int size) => new Vector(elements.Slice(offset, size));
+        public void Inject(int offset, Vector values) => elements.Inject(offset, values.elements);
         public override string ToString()
         {
             return $"[{string.Join(",", elements)}]";

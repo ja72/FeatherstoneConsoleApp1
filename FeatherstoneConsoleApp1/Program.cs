@@ -17,8 +17,8 @@ namespace JA
         static void Main(string[] args)
         {
             StackedVector stacekdVector = new StackedVector(3, 3);
-            stacekdVector[0]=1*Vector3.UnitX;
-            stacekdVector[1]=3*Vector3.UnitZ;
+            stacekdVector[0] = 1 * Vector3.UnitX;
+            stacekdVector[1] = 3 * Vector3.UnitZ;
             Console.WriteLine($"vector={stacekdVector.ToVector()}");
 
             StackedMatrix stackedMatrix = StackedMatrix.CompatibleWith(stacekdVector);
@@ -48,6 +48,16 @@ namespace JA
 
             var sim = sys.ToSimulation();
             Console.WriteLine(sim);
+
+            sim.RunTo(1.0, 20);
+            Console.WriteLine($"{"Time",8} {"(q)",16} {"(qp)",16}");
+            var history = sim.History;
+            foreach (var item in history)
+            {
+                var q = $"({item.Y[0].ToStringList()})";
+                var qp = $"({item.Y[1].ToStringList()})";
+                Console.WriteLine($"{item.t,8} {q,16} {qp,16}");
+            }
         }
     }
 }

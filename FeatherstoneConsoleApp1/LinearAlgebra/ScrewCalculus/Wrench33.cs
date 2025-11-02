@@ -37,7 +37,7 @@ namespace JA.LinearAlgebra.ScrewCalculus
                 Vector3.Zero,
                 angular
             );
-        public static explicit operator Wrench33(Vector33 vector)
+        public static implicit operator Wrench33(Vector33 vector)
             => new Wrench33(vector.v1, vector.v2);
         #endregion
 

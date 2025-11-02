@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 
@@ -405,6 +406,13 @@ namespace JA
             return result;
         }
 
+        #endregion
+
+        #region Formatting
+        public static string ToStringList(this double[] elements, string format = "g4", string delimiter = ",")
+        {
+            return string.Join(delimiter, elements.Select(x=> x.ToString(format)));
+        }
         #endregion
     }
 }

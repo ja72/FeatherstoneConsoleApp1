@@ -37,7 +37,7 @@ namespace JA.LinearAlgebra.ScrewCalculus
                 linear, 
                 Vector3.Zero
             );
-        public static explicit operator Twist33(Vector33 vector)
+        public static implicit operator Twist33(Vector33 vector)
             => new Twist33(vector.v1, vector.v2);   
         #endregion
 

@@ -31,7 +31,6 @@ namespace JA
 
             World sys = new World(UnitSystem.MKS);
             var steel = Material.Library(MaterialSpec.Steel);
-            float L = 1.0f, m = 1.0f;
             var linkage = MassProperties.Box(
                 steel.ConvertTo(UnitSystem.CMKS),
                 30f,    // length in cm

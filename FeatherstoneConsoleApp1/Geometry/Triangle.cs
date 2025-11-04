@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.Numerics;
 using System.Linq;
 
 namespace JA.Geometry

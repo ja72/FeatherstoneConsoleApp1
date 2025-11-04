@@ -10,6 +10,9 @@ using JA.LinearAlgebra.VectorCalculus;
 
 namespace JA.Dynamics
 {
+
+    public delegate double JointMotor(double time, double q, double qp);
+
     public enum JointType
     {
         [Description("Combined rotation and parallel translation")]
@@ -47,6 +50,8 @@ namespace JA.Dynamics
             this.localAxis=localAxis;
             this.pitch=type!=JointType.Prismatic ? pitch : double.PositiveInfinity;
             this.MassProperties=massProperties.ConvertTo(units);
+            this.InitialConditions=(0, 0);
+            this.Motor=ConstantValue(0);
         }
         Joint(Joint parent, JointType type, Pose3 localPosition, Vector3 localAxis, double pitch, MassProperties massProperties)
         {
@@ -62,6 +67,8 @@ namespace JA.Dynamics
             {
                 parent.children.Add(this);
             }
+            this.InitialConditions=(0, 0);
+            this.Motor=ConstantValue(0);
         }
 
         public Joint AddScrew(Pose3 localPosition, Vector3 localAxis, double pitch)
@@ -88,6 +95,20 @@ namespace JA.Dynamics
         {
             get => parent;
         }
+        public static JointMotor ConstantValue(double tau)
+            => (t, q, qp) => tau;
+        public static JointMotor SpringValue(double springRate, double dampingRate, double preload = 0)
+            => (t, q, qp) => preload -springRate*q - dampingRate*qp;
+        public static JointMotor FunctionOfTime(Func<double,double> f_time)
+            => (t,q,qp) => f_time(t);
+
+        public JointMotor Motor { get; set; }
+        public (double q, double qp) InitialConditions
+        {
+            get;
+            set;
+        }        
+
         public IReadOnlyList<Joint> Children => children;
         public bool IsRoot => parent==null;
         public bool IsLeaf => children.Count==0;
@@ -108,6 +129,7 @@ namespace JA.Dynamics
             set => pitch=value;
         }
         public MassProperties MassProperties { get; private set; }
+
         public void AttachTo(Joint parent)
         {
             this.parent?.children.Remove(this);
@@ -129,7 +151,7 @@ namespace JA.Dynamics
             R result = operation(this);
             foreach (var child in children)
             {
-                result = child.Traverse(result, operation);
+                result=child.Traverse(result, operation);
             }
             return result;
         }
@@ -155,19 +177,19 @@ namespace JA.Dynamics
                 {
                     stepPos=Vector3.Scale(localAxis*pitch, q);
                     stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return localPosition + Pose3.At(stepPos, stepOri);
+                    return localPosition+Pose3.At(stepPos, stepOri);
                 }
                 case JointType.Revolute:
                 {
                     stepPos=Vector3.Zero;
                     stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return localPosition + Pose3.At(stepPos, stepOri);
+                    return localPosition+Pose3.At(stepPos, stepOri);
                 }
                 case JointType.Prismatic:
                 {
                     stepPos=Vector3.Scale(localAxis, q);
                     stepOri=Quaternion3.Identity;
-                    return localPosition + Pose3.At(stepPos, stepOri);
+                    return localPosition+Pose3.At(stepPos, stepOri);
                 }
                 default:
                 throw new NotSupportedException("Unknown joint type.");
@@ -180,15 +202,15 @@ namespace JA.Dynamics
             {
                 case JointType.Screw:
                 {
-                    return Screws.TwistAt(axis, top.position, pitch);
+                    return Vector33.Twist(axis, top.position, pitch);
                 }
                 case JointType.Revolute:
                 {
-                    return Screws.TwistAt(axis, top.position, 0.0);
+                    return Vector33.Twist(axis, top.position, 0.0);
                 }
                 case JointType.Prismatic:
                 {
-                    return Screws.PureTwist(axis);
+                    return Vector33.Twist(axis);
                 }
                 default:
                 throw new NotSupportedException("Unknown joint type.");
@@ -216,7 +238,7 @@ namespace JA.Dynamics
         #region Units
         public void ConvertTo(UnitSystem target)
         {
-            if(units==target) return;
+            if (units==target) return;
 
             var fl = Unit.Length.Convert(Units, target);
 

@@ -161,10 +161,29 @@ namespace JA.Dynamics
         #endregion
 
         #region Mechanics
+        public Matrix3 GetMmoiMatrix(Quaternion3 orientation, bool inverse = false)
+        {
+            Matrix3 I_body = data.mmoi;
+            if(inverse && I_body.TryInvert(out var I_body_inv))
+            {
+                I_body=I_body_inv;
+            }
+            Matrix3 R = orientation.ToRotation();
+            return R*I_body*R.Transpose();
+        }
+
         public Vector33 GetWeight(Pose3 pose, Vector3 gravity, out Vector3 cg)
         {
             cg = Pose3.Add(pose, data.cg);
-            return Dynamics.GetWeight(data.mass, cg, gravity);
+            return GetWeight(data.mass, cg, gravity);
+        }
+        public static Vector33 GetWeight(double mass, Vector3 cg, Vector3 gravity)
+        {
+            //tex: Weight Wrench
+            //$$\boldsymbol{w}_i = \begin{bmatrix} m_i \vec{g} \\ \vec{cg}_i \times m_i \vec{g} \end{bmatrix}$$
+
+            var fg = Vector3.Scale(gravity, mass);
+            return Vector33.Wrench(fg, cg);
         }
         public Matrix33 Spi(Pose3 pose,out Matrix3 wolrdInertiaAtCg)
         {
@@ -172,17 +191,68 @@ namespace JA.Dynamics
         }
         public Matrix33 Spi(Quaternion3 orientation, Vector3 cg, out Matrix3 wolrdInertiaAtCg)
         {
-            wolrdInertiaAtCg = Dynamics.GetMmoiMatrix(data.mmoi, orientation);
-            return Dynamics.Spi(data.mass, wolrdInertiaAtCg, cg);
+            wolrdInertiaAtCg = GetMmoiMatrix(orientation);
+            return Spi(data.mass, wolrdInertiaAtCg, cg);
         }
+        /// <summary>
+        /// Spatial Inertia Matrix
+        /// </summary>
+        /// <param name="mass">Body mass</param>
+        /// <param name="worldInertiaAtCg">Body mass moment of inertia matrix about center of gravity, and aligned with global coordinates
+        /// </param>
+        /// <param name="cg">Body center of mass position</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix33 Spi(double mass, Matrix3 worldInertiaAtCg, Vector3 cg)
+        {
+            // Spatial inertia matrix:
+            // [ m*I3           -m*cgx  ]
+            // [ m*cgx   Icm-m*cgx*cgx  ]
+            var a11 = Matrix3.Scalar(mass);
+            var a21 = Matrix3.CrossOp(cg, mass);
+            var a12 = Matrix3.Negate(a21);
+            var a22 = worldInertiaAtCg + Matrix3.MomentTensor(cg, mass);
+            return new Matrix33(
+                a11,
+                a12,
+                a21,
+                a22
+            );
+        }
+
         public Matrix33 Spm(Pose3 pose, out Matrix3 wolrdInertiaAtCgInverse)
         {
             return Spm(pose.Orientation, Pose3.Add(pose, data.cg), out wolrdInertiaAtCgInverse);
         }
         public Matrix33 Spm(Quaternion3 orientation, Vector3 cg, out Matrix3 wolrdInertiaAtCgInverse)
         {
-            wolrdInertiaAtCgInverse = Dynamics.GetMmoiMatrix(data.mmoi, orientation, true);
-            return Dynamics.Spm(data.mass, wolrdInertiaAtCgInverse, cg);
+            wolrdInertiaAtCgInverse = GetMmoiMatrix(orientation, true);
+            return Spm(data.mass, wolrdInertiaAtCgInverse, cg);
+        }
+        /// <summary>
+        /// Spatial Inverse Inertia Matrix
+        /// </summary>
+        /// <param name="mass">Body mass</param>
+        /// <param name="worldInertiaAtCgInverse">Inverse body mass moment of inertia matrix about center of gravity, and aligned with global coordinates
+        /// </param>
+        /// <param name="cg">Body center of mass position</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix33 Spm(double mass, Matrix3 worldInertiaAtCgInverse, Vector3 cg)
+        {
+            // Spatial mobility matrix:
+            // [ 1/m-cgx*I_inv*cgx  cgx*I_inv ]
+            // [ -I_inv*cgx           I_inv   ]
+            var mI3 = Matrix3.Scalar(1/mass);
+            var cgx = Matrix3.CrossOp(cg);
+            var a12 = (cgx * worldInertiaAtCgInverse);
+            var a11 = mI3 - a12 * cgx;
+            var a21 = Matrix3.Product(worldInertiaAtCgInverse, -cgx);
+            var a22 = worldInertiaAtCgInverse;
+            return new Matrix33(
+                a11,
+                a12,
+                a21,
+                a22
+            );
         }
         #endregion
 

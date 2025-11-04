@@ -1,0 +1,347 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{makeidx}
+\makeindex
+\usepackage[margin=10pt,font=small,labelfont=bf,labelsep=endash]{caption}
+\usepackage{units}
+\usepackage{footnote}
+\usepackage{booktabs}
+\usepackage{flafter}
+\usepackage{wasysym}
+\usepackage{fancyheadings}
+\usepackage{isomath}
+\usepackage{bm, upgreek}
+\usepackage{graphicx}
+\usepackage{array}
+\newcommand*{\diff}{\mathop{}\!\mathrm{d}}
+\newcommand*{\Diff}[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\der}[2]{\mathop{}\!\frac{\mathrm{d}#2}{\mathrm{d}#1}}
+\newcommand*{\dder}[2]{\mathop{}\!\frac{\mathrm{d}^{2}#2}{\mathrm{d}{#1}^2}}
+\newcommand*{\nder}[3]{\mathop{}\!\frac{\mathrm{d}^{#2}#3}{\mathrm{d}#1^{#2}}}
+\newcommand*{\intg}[2]{\mathop{}\!\int {#1} \,\mathrm{d}{#2}}
+\newcommand*{\intgl}[4]{\mathop{}\!\int \limits_{#3}^{#4} #1 \,\mathrm{d}#2}
+\newcommand*{\iintg}[3]{\mathop{}\!\iint #1 \,\mathrm{d}#2\,\mathrm{d}#3}
+\newcommand*{\Rot}{\operatorname{Rot}}
+\newcommand*{\bmat}{\matrixsym}
+\newcommand*{\bvec}{\vectorsym}
+\newcommand*{\bten}{\tensorsym}
+\fancyhf{}               % Clear fancy header/footer
+\fancyhead[L]{John Alexiou}
+\fancyhead[R]{\thepage}  % Page number in Right footer
+\fancyfoot[L]{jalexiou@hotmail.com}   % My name in Left footer
+\fancyfoot[R]{\jobname}
+\makeatletter
+\let\ps@plain\ps@fancy   % Plain page style = fancy page style
+\makeatother
+%Width  of line below header
+%\setlength{\headrulewidth}{1pt}
+%\usepackage[pdfborder={0 0 0}]{hyperref}
+%\usepackage{xcolor}
+%\usepackage{asymptote}
+%\usepackage[samesize]{cancel}
+\setlength{\footnotesep}{12pt}
+\makesavenoteenv{tabular}
+%\usepackage{fancyvrb}
+\end_preamble
+\use_default_options true
+\begin_modules
+algorithm2e
+theorems-ams
+InStar
+multicol
+graphicboxes
+varwidth
+pdfcomment
+pdfform
+\end_modules
+\maintain_unincluded_children false
+\begin_forced_local_layout
+Format 66
+Style "In Preamble"
+	Category "FrontMatter"
+	Margin Static
+	LatexType Paragraph
+	InTitle 0
+	InPreamble 1
+	TocLevel -1000
+	ResumeCounter 0
+	StepMasterCounter 0
+	NeedProtect 0
+	KeepEmpty 0
+	NextNoIndent 0
+	CommandDepth 0
+	LatexName "dummy"
+	ItemCommand item
+	LabelType No_Label
+	EndLabelType No_Label
+	ParagraphGroup "0"
+	ParIndent MM
+	ParSkip 0.4
+	ItemSep 0
+	TopSep 0
+	BottomSep 0
+	LabelBottomSep 0
+	ParSep 0
+	NewLine 1
+	Align Block
+	AlignPossible Block, Center, Layout, Left, Right
+	FreeSpacing 0
+	PassThru 0
+	ParbreakIsNewline 0
+	RefPrefix OFF
+	HTMLLabelFirst 0
+	HTMLStyle
+div.standard {
+margin-bottom: 2ex;
+}
+	EndHTMLStyle
+	HTMLForceCSS 0
+	HTMLTitle 0
+	Spellcheck 1
+	ForceLocal 1
+End
+Style "In Title"
+	Category "FrontMatter"
+	Margin Static
+	LatexType Paragraph
+	InTitle 1
+	InPreamble 0
+	TocLevel -1000
+	ResumeCounter 0
+	StepMasterCounter 0
+	NeedProtect 0
+	KeepEmpty 0
+	NextNoIndent 0
+	CommandDepth 0
+	LatexName "dummy"
+	ItemCommand item
+	LabelType No_Label
+	EndLabelType No_Label
+	ParagraphGroup "0"
+	ParIndent MM
+	ParSkip 0.4
+	ItemSep 0
+	TopSep 0
+	BottomSep 0
+	LabelBottomSep 0
+	ParSep 0
+	NewLine 1
+	Align Block
+	AlignPossible Block, Center, Layout, Left, Right
+	FreeSpacing 0
+	PassThru 0
+	ParbreakIsNewline 0
+	RefPrefix OFF
+	HTMLLabelFirst 0
+	HTMLStyle
+div.standard {
+margin-bottom: 2ex;
+}
+	EndHTMLStyle
+	HTMLForceCSS 0
+	HTMLTitle 0
+	Spellcheck 1
+	ForceLocal 1
+End
+\end_forced_local_layout
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\output_sync_macro "\usepackage[active]{srcltx}"
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 20mm
+\topmargin 30mm
+\rightmargin 20mm
+\bottommargin 40mm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 2
+\papersides 1
+\paperpagestyle fancy
+\listings_params "mathescape=true"
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Basic Equations for each link
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}\boldsymbol{v}_{i} & =\boldsymbol{v}_{i-1}+\boldsymbol{s}_{i}\dot{q}_{i}\\
+\boldsymbol{a}_{i} & =\boldsymbol{a}_{i-1}+\boldsymbol{s}_{i}\ddot{q}_{i}+\boldsymbol{v}_{i}\times\boldsymbol{s}_{i}\dot{q}_{i}\\
+\boldsymbol{f}_{i}-\boldsymbol{f}_{i+1}+\boldsymbol{w}_{i} & ={\bf I}_{i}\boldsymbol{a}_{i}+\boldsymbol{v}_{i}\times{\bf I}_{i}\boldsymbol{v}_{i}\\
+Q_{i} & =\boldsymbol{s}_{i}^{\top}\boldsymbol{f}_{i}
+\end{aligned}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Loop up the chain to propagate the kinematics (
+\family typewriter
+i=1 to N
+\family default
+)
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}\boldsymbol{s}_{i} & =\begin{bmatrix}\vec{r}_{i}\times\hat{z}_{i}\\
+\hat{z}_{i}
+\end{bmatrix}\,{\rm or}\,\begin{bmatrix}\hat{z}_{i}\\
+\\
+\end{bmatrix}\\
+\boldsymbol{v}_{i} & =\boldsymbol{v}_{{\rm parent}}+\boldsymbol{s}_{i}\dot{q}_{i}\\
+{\bf I}_{i} & =\begin{bmatrix}m_{i} & -m_{i}[\vec{r}_{i}^{C}\times]\\
+m_{i}[\vec{r}_{i}^{C}\times] & \mathcal{I}_{i}-m_{i}[\vec{r}_{i}^{C}\times][\vec{r}_{i}^{C}\times]
+\end{bmatrix}\\
+\boldsymbol{\kappa}_{i} & =\begin{bmatrix}\vec{\omega}_{i}\times & \vec{v}_{i}\times\\
+ & \vec{\omega}_{i}\times
+\end{bmatrix}\boldsymbol{s}_{i}\dot{q}_{i}\\
+\boldsymbol{p}_{i} & =\begin{bmatrix}\vec{\omega}_{i}\times\\
+\vec{v}_{i}\times & \vec{\omega}_{i}\times
+\end{bmatrix}{\bf I}_{i}\boldsymbol{v}_{i}\\
+\boldsymbol{w}_{i} & =\begin{bmatrix}m_{i}\vec{g}\\
+\vec{r}_{i}^{C}\times m_{i}\vec{g}
+\end{bmatrix}
+\end{aligned}
+\end{equation}
+
+\end_inset
+
+start with
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{v}_{0}=\begin{bmatrix}0\\
+0
+\end{bmatrix}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Loop down the chain to propagate articulated inertias (
+\family typewriter
+i=N to 1
+\family default
+)
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}{\bf I}_{i}^{A} & ={\bf I}_{i}+\sum_{n}^{{\rm children}}\left(1-\boldsymbol{T}_{n}\boldsymbol{s}_{n}^{\top}\right){\bf I}_{n}^{A}\\
+\boldsymbol{p}_{i}^{A} & =\boldsymbol{p}_{i}-\boldsymbol{w}_{i}+\sum_{n}^{{\rm children}}\left(\boldsymbol{T}_{n}Q_{n}+\left(1-\boldsymbol{T}_{n}\boldsymbol{s}_{n}^{\top}\right)\left({\bf I}_{n}^{A}\boldsymbol{\kappa}_{n}+\boldsymbol{p}_{n}^{A}\right)\right)
+\end{aligned}
+\end{equation}
+
+\end_inset
+
+note that for each leaf in the tree
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}{\bf I}_{N}^{A} & ={\bf I}_{N}\\
+\boldsymbol{p}_{N}^{A} & =\boldsymbol{p}_{N}-\boldsymbol{w}_{N}
+\end{aligned}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Loop up the chain to solve dynamics (
+\family typewriter
+i=1 to N
+\family default
+)
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}\ddot{q}_{i} & =\left(\boldsymbol{s}_{i}^{\top}{\bf I}_{n}^{A}\boldsymbol{s}_{i}\right)^{-1}\left(Q_{i}-\boldsymbol{s}_{i}^{\top}\left({\bf I}_{n}^{A}\left(\boldsymbol{a}_{i-1}+\boldsymbol{\kappa}_{i}\right)+\boldsymbol{p}_{i}^{A}\right)\right)\\
+\boldsymbol{a}_{i} & =\boldsymbol{s}_{i}\ddot{q}_{i}+\boldsymbol{a}_{i-1}+\boldsymbol{\kappa}_{i}\\
+\boldsymbol{f}_{i} & ={\bf I}_{n}^{A}\boldsymbol{a}_{i}+\boldsymbol{p}_{i}^{A}
+\end{aligned}
+\end{equation}
+
+\end_inset
+
+start with
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{a}_{0}=\begin{bmatrix}0\\
+0
+\end{bmatrix}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

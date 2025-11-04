@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using JA.LinearAlgebra;
@@ -15,6 +16,7 @@ namespace JA.Dynamics
         readonly int[] parents;
         readonly int[][] childrens;
         readonly List<(double t, StackedVector Y)> history;
+        readonly double[] initialPos, initialVel;
 
         public Vector3 Gravity => gravity;
         public Joint[] Joints => joints;
@@ -35,16 +37,20 @@ namespace JA.Dynamics
             parents=world.GetParents(joints);
             childrens=world.GetChildren(joints);
 
-            foreach (var item in joints)
+            int n = joints.Length;
+            initialPos = new double[n];
+            initialVel = new double[n];
+            for (int i = 0; i<n; i++)
             {
-                item.ConvertTo(Units);
+                joints[i].ConvertTo(Units);
+                var (q, qp)=joints[i].InitialConditions;
+                initialPos[i]=q;
+                initialVel[i]=qp;
             }
 
-            int n = joints.Length;
             this.history=new List<(double t, StackedVector Y)>();
-            history.Add((0, new StackedVector(n, n)));
+            history.Add((0, new StackedVector(initialPos, initialVel)));
 
-            GetJointTorqueFunction=(t, q, qp) => Factory.CreateArray<double>(q.Length);
         }
 
         #region Simulation
@@ -52,7 +58,7 @@ namespace JA.Dynamics
         {
             this.history.Clear();
             int n = joints.Length;
-            history.Add((0, new StackedVector(n, n)));
+            history.Add((0, new StackedVector(initialPos, initialVel)));
         }
         public void AddSolution(double t, StackedVector Y)
         {
@@ -110,24 +116,28 @@ namespace JA.Dynamics
         #endregion
 
         #region Dynamics
-        public Func<double, double[], double[], double[]> GetJointTorqueFunction
+
+        public double[] GetAllJointTorques(double t, double[] q, double[] qp)
         {
-            get;
-            set;
+            int n = joints.Length;
+            double[] tau = new double[n];
+            for (int i = 0; i<n; i++)
+            {
+                tau[i]=joints[i].Motor(t, q[i], qp[i]);
+            }
+            return tau;
         }
+
         public StackedVector GetRate(double t, StackedVector Y)
         {
-            var f_tau = GetJointTorqueFunction;
             int n = joints.Length;
             double[] q = Y[0].ToArray();
             double[] qp = Y[1].ToArray();
-            double[] tau = f_tau(t, q, qp);
+            double[] tau = GetAllJointTorques(t, q, qp);
             double[] qpp = CalculateAccelerations(t,q,qp,tau);
 
             return new StackedVector(qp, qpp);
         }
-        public double[] CalculateAccelerations(double time, double[] q, double[] qp)
-            => CalculateAccelerations(time, q, qp, GetJointTorqueFunction(time, q, qp));
         public double[] CalculateAccelerations(double time, double[] q, double[] qp, double[] tau)
         {
             // Placeholder for dynamics calculation
@@ -151,12 +161,13 @@ namespace JA.Dynamics
             Vector33[] w = new Vector33[n];
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
-                // Default ground is i mmovable
-                Pose3 pos = Pose3.Origin;
-                Vector33 vel = Vector33.Zero;
-
                 Joint joint = joints[i_joint];
                 int i_parent = parents[i_joint];
+
+
+                // Default ground is immovable
+                Pose3 pos = Pose3.Origin;
+                Vector33 vel = Vector33.Zero;
                 if (i_parent>=0)
                 {
                     // Get parent kinematics
@@ -167,14 +178,19 @@ namespace JA.Dynamics
                 pos+=joint.GetLocalJointStep(q[i_joint]);
                 // Set top of joint position
                 top[i_joint]=pos;
-                // Find Center of mass
-                cg[i_joint]=pos+joint.MassProperties.CG;
 
-                //tex: Joint Screw Axis $$s_i = \begin{bmatrix} \vec{r}_i \times \hat{z}_i \\ \hat{z}_i \end{bmatrix}$$
-                Matrix3 Ic = Dynamics.GetMmoiMatrix(joint.MassProperties.MMoi, pos.orientation);
 
                 // Get weight wrench
-                w[i_joint]=Dynamics.GetWeight(joint.MassProperties.Mass, cg[i_joint], gravity);
+                w[i_joint]=joint.MassProperties.GetWeight(pos, gravity, out var cgi);
+                cg[i_joint] = cgi;
+                
+                //tex: Spatial Inertia $$\mathbf{I}_i = \begin{bmatrix} 
+                // m_i & -m_i \vec{c}_i\times \\
+                // m_i \vec{c}_i\times & \mathrm{I}_C - m_i \vec{c}_i\times \vec{c}_i\times \end{bmatrix}$$
+
+                I[i_joint]=joint.MassProperties.Spi(pos.orientation, cgi, out var Ic);
+
+                //tex: Joint Screw Axis $$s_i = \begin{bmatrix} \vec{r}_i \times \hat{z}_i \\ \hat{z}_i \end{bmatrix}$$
 
                 s[i_joint]=joint.GetJointAxis(pos);
 
@@ -184,18 +200,13 @@ namespace JA.Dynamics
                 v[i_joint]=vel+sqp;
 
                 //tex: Bias Acceleration $$k_i = v_i \times s_i \dot{q}_i$$
-                k[i_joint]=Screws.CrossTwist(v[i_joint], sqp);
-
-                //tex: Spatial Inertia $$\mathbf{I}_i = \begin{bmatrix} 
-                // m_i & -m_i \vec{c}_i\times \\
-                // m_i \vec{c}_i\times & \mathrm{I}_C - m_i \vec{c}_i\times \vec{c}_i\times \end{bmatrix}$$
-                I[i_joint]=Dynamics.Spi(joint.MassProperties.Mass, Ic, cg[i_joint]);
+                k[i_joint]=Vector33.CrossTwist(v[i_joint], sqp);
 
                 //tex: Momentum $$ \ell_i = \mathbf{I}_i v_i $$
                 l[i_joint]=I[i_joint]*v[i_joint];
 
                 //tex: Bias Forces $$ p_i = v_i \times \mathbf{I}_i \mathbf{v}_i$$
-                p[i_joint]=Screws.CrossWrench(v[i_joint], l[i_joint]);
+                p[i_joint]=Vector33.CrossWrench(v[i_joint], l[i_joint]);
             }
 
             // Propagate Articulated Inertia Down The Chain
@@ -235,10 +246,11 @@ namespace JA.Dynamics
             Vector33[] f = new Vector33[n];
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
-                Vector33 ap = Screws.PureTwist(-gravity);
 
                 Joint joint = joints[i_joint];
                 int i_parent = parents[i_joint];
+
+                Vector33 ap = Vector33.Twist(-gravity);
                 if (i_parent>=0)
                 {
                     // Get parent kinematics
@@ -256,6 +268,44 @@ namespace JA.Dynamics
                     s[i_joint], I_A[i_joint]*ap+pn) )/ji;
                 a[i_joint]=s[i_joint]*qpp[i_joint]+ap;
                 f[i_joint]=I_A[i_joint]*a[i_joint]+pn;
+            }
+
+            // Check Equation Compliance for each body
+            for (int i_joint = 0; i_joint<n; i_joint++)
+            {
+                Joint joint = joints[i_joint];
+                int i_parent = parents[i_joint];
+
+
+                // Default ground is immovable
+                Pose3 pos = Pose3.Origin;
+                Vector33 vel = Vector33.Zero;
+                Vector33 ap = Vector33.Twist(-gravity);
+                if (i_parent>=0)
+                {
+                    // Get parent kinematics
+                    pos=top[i_parent];
+                    vel=v[i_parent];
+                    ap=a[i_parent];
+                }
+
+                //tex: Force Balance
+                //$$ f_i - \sum_n f_n + w_i = I_i a_i + v_i \times I_i v_i$$
+
+                var children = childrens[i_joint];
+                Vector33 f_net = f[i_joint];
+                for (int i_child = 0; i_child<children.Length; i_child++)
+                {
+                    f_net -= f[i_child];
+                }
+                f_net+=w[i_joint];
+
+                Vector33 f_inertial = I[i_joint]*a[i_joint] + p[i_joint];
+
+                Vector33 f_check = f_net - f_inertial;
+
+                Trace.WriteLine($"#{i_joint} Force Balance = {f_net} - {f_inertial} = {f_check}");
+
             }
             return qpp;
         }

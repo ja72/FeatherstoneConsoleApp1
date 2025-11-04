@@ -11,24 +11,23 @@ namespace JA
     using JA.LinearAlgebra.ScrewCalculus;
 
     using JA.Dynamics;
-    
+    using System.Diagnostics;
+
     internal class Program
     {
         static void Main(string[] args)
         {
-            StackedVector stacekdVector = new StackedVector(3, 3);
-            stacekdVector[0] = 1 * Vector3.UnitX;
-            stacekdVector[1] = 3 * Vector3.UnitZ;
-            Console.WriteLine($"vector={stacekdVector.ToVector()}");
+            var listener = new DefaultTraceListener(); //new ConsoleTraceListener()
 
-            StackedMatrix stackedMatrix = StackedMatrix.CompatibleWith(stacekdVector);
-            stackedMatrix[0, 0]=Matrix3.Identity;
-            stackedMatrix[0, 1]=Matrix3.Zero;
-            stackedMatrix[1, 0]=-Matrix3.Identity;
-            stackedMatrix[1, 1]=Matrix3.Identity;
+            Trace.Listeners.Add(listener);
 
-            Console.WriteLine($"matrix={stackedMatrix.ToMatrix()}");
+            //TestStackedVector();
 
+            TestSimulation();
+        }
+
+        private static void TestSimulation()
+        {
             World sys = new World(UnitSystem.MKS);
             var steel = Material.Library(MaterialSpec.Steel);
             var linkage = MassProperties.Box(
@@ -37,7 +36,7 @@ namespace JA
                 2f,     // height in cm
                 2.111f  // thickness in cm
                 ).WithMass(1);
-            linkage = linkage.At(Vector3.UnitX * 14.905f);
+            linkage=linkage.At(Vector3.UnitX*14.905f);
             Console.WriteLine(linkage);
             //linkage = linkage.ConvertTo(UnitSystem.MKS);
             //Console.WriteLine(linkage);
@@ -57,6 +56,21 @@ namespace JA
                 var qp = $"({item.Y[1].ToStringList()})";
                 Console.WriteLine($"{item.t,8} {q,16} {qp,16}");
             }
+        }
+
+        private static void TestStackedVector()
+        {
+            StackedVector stacekdVector = new StackedVector(3, 3);
+            stacekdVector[0]=1*Vector3.UnitX;
+            stacekdVector[1]=3*Vector3.UnitZ;
+            Console.WriteLine($"vector={stacekdVector.ToVector()}");
+
+            StackedMatrix stackedMatrix = StackedMatrix.CompatibleWith(stacekdVector);
+            stackedMatrix[0, 0]=Matrix3.Identity;
+            stackedMatrix[0, 1]=Matrix3.Zero;
+            stackedMatrix[1, 0]=-Matrix3.Identity;
+            stackedMatrix[1, 1]=Matrix3.Identity;
+            Console.WriteLine($"matrix={stackedMatrix.ToMatrix()}");
         }
     }
 }

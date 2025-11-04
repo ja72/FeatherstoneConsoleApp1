@@ -107,8 +107,8 @@ namespace JA.LinearAlgebra.ScrewCalculus
             // [ a11 a12 ] * [ v1 ] = [ a11*v1 + a12*v2 ]
             // [ a21 a22 ]   [ v2 ]   [ a21*v1 + a22*v2 ]
             return new Vector33(
-                Vector3.Add(Matrix3.Product(a.a11, b.v1), Matrix3.Product(a.a12, b.v2)),
-                Vector3.Add(Matrix3.Product(a.a21, b.v1), Matrix3.Product(a.a22, b.v2))
+                Vector3.Add(Matrix3.Product(a.a11, b.linear), Matrix3.Product(a.a12, b.angular)),
+                Vector3.Add(Matrix3.Product(a.a21, b.linear), Matrix3.Product(a.a22, b.angular))
             );
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -118,8 +118,8 @@ namespace JA.LinearAlgebra.ScrewCalculus
             //[ v1  v2 ] * [ a11 a12 ]  = [ a11*v1 + a21*v2  a12*v1 + a22*v2 ]
             //             [ a21 a22 ]     
             return new Vector33(
-                Vector3.Add(Matrix3.Product(a.a11, b.v1), Matrix3.Product(a.a22, b.v2)),
-                Vector3.Add(Matrix3.Product(a.a12, b.v1), Matrix3.Product(a.a22, b.v2))
+                Vector3.Add(Matrix3.Product(a.a11, b.linear), Matrix3.Product(a.a22, b.angular)),
+                Vector3.Add(Matrix3.Product(a.a12, b.linear), Matrix3.Product(a.a22, b.angular))
             );
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

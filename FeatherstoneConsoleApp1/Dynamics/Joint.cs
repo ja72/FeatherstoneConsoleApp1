@@ -145,7 +145,7 @@ namespace JA.Dynamics
         #endregion
 
         #region Mechanics
-        public Pose3 GetJointStep(Pose3 @base, double q)
+        public Pose3 GetLocalJointStep(double q)
         {
             Vector3 stepPos;
             Quaternion3 stepOri;
@@ -155,40 +155,40 @@ namespace JA.Dynamics
                 {
                     stepPos=Vector3.Scale(localAxis*pitch, q);
                     stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return @base+Pose3.At(stepPos, stepOri);
+                    return localPosition + Pose3.At(stepPos, stepOri);
                 }
                 case JointType.Revolute:
                 {
                     stepPos=Vector3.Zero;
                     stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return @base+Pose3.At(stepPos, stepOri);
+                    return localPosition + Pose3.At(stepPos, stepOri);
                 }
                 case JointType.Prismatic:
                 {
                     stepPos=Vector3.Scale(localAxis, q);
                     stepOri=Quaternion3.Identity;
-                    return @base+Pose3.At(stepPos, stepOri);
+                    return localPosition + Pose3.At(stepPos, stepOri);
                 }
                 default:
                 throw new NotSupportedException("Unknown joint type.");
             }
         }
-        public Twist33 GetJointAxis(Pose3 top)
+        public Vector33 GetJointAxis(Pose3 top)
         {
             Vector3 axis = top.orientation.Rotate(localAxis);
             switch (type)
             {
                 case JointType.Screw:
                 {
-                    return Twist33.At(axis, top.position, pitch);
+                    return Screws.TwistAt(axis, top.position, pitch);
                 }
                 case JointType.Revolute:
                 {
-                    return Twist33.At(axis, top.position, 0.0);
+                    return Screws.TwistAt(axis, top.position, 0.0);
                 }
                 case JointType.Prismatic:
                 {
-                    return Twist33.Pure(axis);
+                    return Screws.PureTwist(axis);
                 }
                 default:
                 throw new NotSupportedException("Unknown joint type.");

@@ -12,57 +12,6 @@ namespace JA.Dynamics
 {
     public static class Dynamics
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Pose3 GetJointStep(double q, Pose3 @base, JointType type, Vector3 localAxis, double pitch = 0)
-        {
-            Vector3 stepPos;
-            Quaternion3 stepOri;
-            switch (type)
-            {
-                case JointType.Screw:
-                {
-                    stepPos=Vector3.Scale(localAxis*pitch, q);
-                    stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return @base+Pose3.At(stepPos, stepOri);
-                }
-                case JointType.Revolute:
-                {
-                    stepPos=Vector3.Zero;
-                    stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return @base+Pose3.At(stepPos, stepOri);
-                }
-                case JointType.Prismatic:
-                {
-                    stepPos=Vector3.Scale(localAxis, q);
-                    stepOri=Quaternion3.Identity;
-                    return @base+Pose3.At(stepPos, stepOri);
-                }
-                default:
-                throw new NotSupportedException("Unknown joint type.");
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Twist33 GetJointAxis(Pose3 top, JointType type, Vector3 localAxis, double pitch = 0)
-        {
-            Vector3 axis = top.orientation.Rotate(localAxis);
-            switch (type)
-            {
-                case JointType.Screw:
-                {
-                    return Twist33.At(axis, top.position, pitch);
-                }
-                case JointType.Revolute:
-                {
-                    return Twist33.At(axis, top.position, 0.0);
-                }
-                case JointType.Prismatic:
-                {
-                    return Twist33.Pure(axis);
-                }
-                default:
-                    throw new NotSupportedException("Unknown joint type.");
-            }
-        }
         public static Matrix3 GetMmoiMatrix(Matrix3 bodyInertiaAtCg, Quaternion3 orientation, bool inverse = false)
         {
             Matrix3 I_body = bodyInertiaAtCg;
@@ -74,12 +23,12 @@ namespace JA.Dynamics
             return R*I_body*R.Transpose();
         }
 
-        public static Wrench33 GetWeight(double mass, Vector3 cg, Vector3 gravity)
+        public static Vector33 GetWeight(double mass, Vector3 cg, Vector3 gravity)
         {
             // W = [  m*g  ]
             //     [ cgx*m*g]
             var fg = Vector3.Scale(gravity, mass);
-            return Wrench33.At(fg, cg);
+            return Screws.WrenchAt(fg, cg);
         }
 
         /// <summary>

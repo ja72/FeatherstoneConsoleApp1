@@ -112,9 +112,8 @@
     <Compile Include="LinearAlgebra\LinearAlgebra.cs" />
     <Compile Include="LinearAlgebra\Matrix.cs" />
     <Compile Include="LinearAlgebra\ScrewCalculus\Matrix33.cs" />
-    <Compile Include="LinearAlgebra\ScrewCalculus\Twist33.cs" />
+    <Compile Include="LinearAlgebra\ScrewCalculus\Screws.cs" />
     <Compile Include="LinearAlgebra\ScrewCalculus\Vector33.cs" />
-    <Compile Include="LinearAlgebra\ScrewCalculus\Wrench33.cs" />
     <Compile Include="LinearAlgebra\StackedMatrix.cs" />
     <Compile Include="LinearAlgebra\StackedVector.cs" />
     <Compile Include="LinearAlgebra\Vector.cs" />

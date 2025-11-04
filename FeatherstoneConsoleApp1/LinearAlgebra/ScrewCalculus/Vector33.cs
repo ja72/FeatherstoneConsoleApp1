@@ -33,74 +33,69 @@ namespace JA.LinearAlgebra.ScrewCalculus
         internal const int Size = 6;
         internal const int ByteSize = Size * sizeof(double);
 
-        internal readonly Vector3 v1, v2;
+        internal readonly Vector3 linear, angular;
 
         #region Factory
-        public Vector33(Vector3 vTop, Vector3 vBottom)
+        public Vector33(Vector3 linear, Vector3 angular)
         {
-            this.v1=vTop;
-            this.v2=vBottom;
+            this.linear=linear;
+            this.angular=angular;
         }
 
         public static Vector33 Zero { get; } = new Vector33(Vector3.Zero, Vector3.Zero);
 
-        public static implicit operator Vector33(Twist33 twist)
-            => new Vector33(twist.linear, twist.angular);   
-        public static implicit operator Vector33(Wrench33 wrench)
-            => new Vector33(wrench.linear, wrench.angular);   
-
         public static Vector33 Twist(Vector3 value, Vector3 position, double pitch = 0)
-            => Twist33.At(value, position, pitch);
+            => Screws.TwistAt(value, position, pitch);
         public static Vector33 Twist(Vector3 value)
-            => Twist33.Pure(value);
+            => Screws.PureTwist(value);
         public static Vector33 Wrench(Vector3 value, Vector3 position, double pitch = 0)
-            => Wrench33.At(value, position, pitch);
+            => Screws.WrenchAt(value, position, pitch);
         public static Vector33 Wrench(Vector3 value)
-            => Wrench33.Pure(value);
+            => Screws.PureWrench(value);
 
         #endregion
 
         #region Properties
-        public Vector3 Top => this.v1;
-        public Vector3 Bottom => this.v2;
+        public Vector3 Linear => this.linear;
+        public Vector3 Angular => this.angular;
         #endregion
 
         #region Algebra
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Dot(Vector33 a, Vector33 b) 
-            => Vector3.Dot(a.v1, b.v1)+Vector3.Dot(a.v2, b.v2);
+            => Vector3.Dot(a.linear, b.linear)+Vector3.Dot(a.angular, b.angular);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix33 Outer(Vector33 a, Vector33 b)
             => new Matrix33(
-                Vector3.Outer(a.v1, b.v1), Vector3.Outer(a.v1, b.v2),
-                Vector3.Outer(a.v2, b.v1), Vector3.Outer(a.v2, b.v2));
+                Vector3.Outer(a.linear, b.linear), Vector3.Outer(a.linear, b.angular),
+                Vector3.Outer(a.angular, b.linear), Vector3.Outer(a.angular, b.angular));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector33 Negate(Vector33 a)
             => new Vector33(
-                -a.v1,
-                -a.v2);
+                -a.linear,
+                -a.angular);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector33 Scale(Vector33 a, double factor)
             => new Vector33(
-                factor*a.v1,
-                factor*a.v2);
+                factor*a.linear,
+                factor*a.angular);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector33 Divide(Vector33 a, double factor)
             => new Vector33(
-                a.v1/factor,
-                a.v2/factor);
+                a.linear/factor,
+                a.angular/factor);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector33 Add(Vector33 a, Vector33 b)
             => new Vector33(
-                a.v1+b.v1,
-                a.v2+b.v2);
+                a.linear+b.linear,
+                a.angular+b.angular);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector33 Subtract(Vector33 a, Vector33 b)
             => new Vector33(
-                a.v1-b.v1,
-                a.v2-b.v2);
+                a.linear-b.linear,
+                a.angular-b.angular);
 
         #endregion
 
@@ -135,7 +130,7 @@ namespace JA.LinearAlgebra.ScrewCalculus
         /// </summary>
         /// <param name="other">The other <see cref="Vector33"/> to compare it to</param>
         /// <returns>True if equal</returns>
-        public bool Equals(Vector33 other) => v1.Equals(other.v1)&&v2.Equals(other.v2);
+        public bool Equals(Vector33 other) => linear.Equals(other.linear)&&angular.Equals(other.angular);
 
         /// <summary>
         /// Calculates the hash code for the <see cref="Vector33"/>
@@ -146,8 +141,8 @@ namespace JA.LinearAlgebra.ScrewCalculus
             unchecked
             {
                 int hc = -1817952719;
-                hc= -1521134295 *hc+v1.GetHashCode();
-                hc= -1521134295 *hc+v2.GetHashCode();
+                hc= -1521134295 *hc+linear.GetHashCode();
+                hc= -1521134295 *hc+angular.GetHashCode();
                 return hc;
             }
         }
@@ -155,12 +150,12 @@ namespace JA.LinearAlgebra.ScrewCalculus
         #endregion
 
         #region Formatting
-        public override string ToString() => $"S[{v1}|{v2}]";
+        public override string ToString() => $"S[{linear}|{angular}]";
         #endregion
 
         #region Collection
         public static implicit operator double[](Vector33 @this) => @this.ToArray();
-        public double[] ToArray() => new double[] { v1.x, v1.y, v1.z, v2.x, v2.y, v2.z };
+        public double[] ToArray() => new double[] { linear.x, linear.y, linear.z, angular.x, angular.y, angular.z };
         #endregion
     }
 

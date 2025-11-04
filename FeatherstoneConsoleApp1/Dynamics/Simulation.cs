@@ -142,18 +142,18 @@ namespace JA.Dynamics
             // Propagate Kinematics Up The Chain
             Pose3[] top = new Pose3[n];
             Vector3[] cg = new Vector3[n];
-            Twist33[] s = new Twist33[n];
-            Twist33[] v = new Twist33[n];
+            Vector33[] s = new Vector33[n];
+            Vector33[] v = new Vector33[n];
             Matrix33[] I = new Matrix33[n];
-            Twist33[] k = new Twist33[n];
-            Wrench33[] p = new Wrench33[n];
-            Wrench33[] l = new Wrench33[n];
-            Wrench33[] w = new Wrench33[n];
+            Vector33[] k = new Vector33[n];
+            Vector33[] p = new Vector33[n];
+            Vector33[] l = new Vector33[n];
+            Vector33[] w = new Vector33[n];
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
-                // Default ground is immovable
+                // Default ground is i mmovable
                 Pose3 pos = Pose3.Origin;
-                Twist33 vel = Twist33.Zero;
+                Vector33 vel = Vector33.Zero;
 
                 Joint joint = joints[i_joint];
                 int i_parent = parents[i_joint];
@@ -163,35 +163,8 @@ namespace JA.Dynamics
                     pos=top[i_parent];
                     vel=v[i_parent];
                 }
-                pos+=joint.localPosition;
-                Vector3 stepPos;
-                Quaternion3 stepOri;
-                switch (joint.type)
-                {
-                    case JointType.Screw:
-                    {
-                        stepPos=Vector3.Scale(joint.localAxis*joint.pitch, q[i_joint]);
-                        stepOri=Quaternion3.FromAxisAngle(joint.localAxis, q[i_joint]);
-                        pos+=Pose3.At(stepPos, stepOri);
-                        break;
-                    }
-                    case JointType.Revolute:
-                    {
-                        stepPos=Vector3.Zero;
-                        stepOri=Quaternion3.FromAxisAngle(joint.localAxis, q[i_joint]);
-                        pos+=Pose3.At(stepPos, stepOri);
-                        break;
-                    }
-                    case JointType.Prismatic:
-                    {
-                        stepPos=Vector3.Scale(joint.localAxis, q[i_joint]);
-                        stepOri=Quaternion3.Identity;
-                        pos+=Pose3.At(stepPos, stepOri);
-                        break;
-                    }
-                    default:
-                    throw new NotSupportedException("Unknown joint type.");
-                }
+                // Find the top of the joint pose
+                pos+=joint.GetLocalJointStep(q[i_joint]);
                 // Set top of joint position
                 top[i_joint]=pos;
                 // Find Center of mass
@@ -203,39 +176,15 @@ namespace JA.Dynamics
                 // Get weight wrench
                 w[i_joint]=Dynamics.GetWeight(joint.MassProperties.Mass, cg[i_joint], gravity);
 
-                //\vec{r}_i \times \hat{z}_i \\ \hat{z}_i
-                //\end{bmatrix}$$
-                //\end{bmatrix}$$
-                Vector3 axis = pos.orientation.Rotate(joint.localAxis);
-                switch (joint.type)
-                {
-                    case JointType.Screw:
-                    {
-                        s[i_joint]=Twist33.At(axis, pos.position, joint.pitch);
-                        break;
-                    }
-                    case JointType.Revolute:
-                    {
-                        s[i_joint]=Twist33.At(axis, pos.position, 0.0);
-                        break;
-                    }
-                    case JointType.Prismatic:
-                    {
-                        s[i_joint]=Twist33.Pure(axis);
-                        break;
-                    }
-                    default:
-                    throw new NotSupportedException("Unknown joint type.");
-                }
+                s[i_joint]=joint.GetJointAxis(pos);
 
-
-                Twist33 sqp = s[i_joint] * qp[i_joint];
+                Vector33 sqp = s[i_joint] * qp[i_joint];
 
                 //tex: Velocity Recursion $$v_i = v_{i-1} + s_i \dot{q}_i$$
                 v[i_joint]=vel+sqp;
 
                 //tex: Bias Acceleration $$k_i = v_i \times s_i \dot{q}_i$$
-                k[i_joint]=Twist33.Cross(v[i_joint], sqp);
+                k[i_joint]=Screws.CrossTwist(v[i_joint], sqp);
 
                 //tex: Spatial Inertia $$\mathbf{I}_i = \begin{bmatrix} 
                 // m_i & -m_i \vec{c}_i\times \\
@@ -243,31 +192,31 @@ namespace JA.Dynamics
                 I[i_joint]=Dynamics.Spi(joint.MassProperties.Mass, Ic, cg[i_joint]);
 
                 //tex: Momentum $$ \ell_i = \mathbf{I}_i v_i $$
-                l[i_joint]=(Wrench33)( I[i_joint]*v[i_joint] );
+                l[i_joint]=I[i_joint]*v[i_joint];
 
                 //tex: Bias Forces $$ p_i = v_i \times \mathbf{I}_i \mathbf{v}_i$$
-                p[i_joint]=Wrench33.Cross(v[i_joint], l[i_joint]);
+                p[i_joint]=Screws.CrossWrench(v[i_joint], l[i_joint]);
             }
 
             // Propagate Articulated Inertia Down The Chain
             Matrix33[] I_A = new Matrix33[n];
-            Wrench33[] p_A = new Wrench33[n];
+            Vector33[] p_A = new Vector33[n];
             for (int i_joint = n-1; i_joint>=0; i_joint--)
             {
                 var joint = joints[i_joint];
                 Matrix33 I_Ai = I[i_joint];
-                Wrench33 I_pi = p[i_joint] - w[i_joint];
+                Vector33 I_pi = p[i_joint] - w[i_joint];
                 var children = childrens[i_joint];
                 for (int i_child = 0; i_child<children.Length; i_child++)
                 {
                     var child = joints[i_child];
                     Matrix33 An = I_A[i_child];
-                    Wrench33 dn = p_A[i_child];
+                    Vector33 dn = p_A[i_child];
                     double Qn = tau[i_child];
-                    Twist33 sn = s[i_child];
-                    Twist33 kn = k[i_child];
+                    Vector33 sn = s[i_child];
+                    Vector33 kn = k[i_child];
                     Vector33 Ln = An*sn;
-                    Wrench33 Tn = Ln/Vector33.Dot(sn,Ln);
+                    Vector33 Tn = Ln/Vector33.Dot(sn,Ln);
                     Matrix33 RUn = 1d - Vector33.Outer(Tn,sn);
 
                     //tex: $$\begin{aligned}{\bf I}_{i}^{A} & ={\bf I}_{i}+\sum_{n}^{{\rm children}}\left(1-\boldsymbol{T}_{n}\boldsymbol{s}_{n}^{\top}\right){\bf I}_{n}^{A}\\
@@ -275,18 +224,18 @@ namespace JA.Dynamics
                     //\end{aligned}$$
 
                     I_Ai+=RUn*An;
-                    I_pi+=Tn*Qn+(Wrench33)( RUn*( (Wrench33)( An*kn )+dn ) );
+                    I_pi+=Tn*Qn+RUn*( An*kn+dn );
                 }
                 I_A[i_joint]=I_Ai;
                 p_A[i_joint]=I_pi;
             }
 
             // Propagate Joint Accelerations up the chain
-            Twist33[] a = new Twist33[n];
-            Wrench33[] f = new Wrench33[n];
+            Vector33[] a = new Vector33[n];
+            Vector33[] f = new Vector33[n];
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
-                Twist33 ap = Twist33.Pure(-gravity);
+                Vector33 ap = Screws.PureTwist(-gravity);
 
                 Joint joint = joints[i_joint];
                 int i_parent = parents[i_joint];

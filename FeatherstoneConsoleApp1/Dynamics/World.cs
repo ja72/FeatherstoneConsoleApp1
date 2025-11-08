@@ -16,9 +16,11 @@ namespace JA.Dynamics
 
         #region Factor
         public World(UnitSystem units)
+            : this(units, -Vector3.UnitY*units.EarthGravity()) { }
+        public World(UnitSystem units, Vector3 gravity)
         {
             this.units=units;
-            this.gravity = -Vector3.UnitY * units.EarthGravity();
+            this.gravity=gravity;
             this.rootJoints=new List<Joint>();
         }
         #endregion

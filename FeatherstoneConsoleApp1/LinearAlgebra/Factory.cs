@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 
-namespace JA
+namespace JA.LinearAlgebra
 {
 
     public static class Factory
@@ -409,9 +409,13 @@ namespace JA
         #endregion
 
         #region Formatting
-        public static string ToStringList(this double[] elements, string format = "g4", string delimiter = ",")
+        public static string ToStringList(this double[] elements, string format, string delimiter = ",")
         {
             return string.Join(delimiter, elements.Select(x=> x.ToString(format)));
+        }
+        public static string ToStringList(this double[] elements, int decimals, string delimiter = ",")
+        {
+            return string.Join(delimiter, elements.Select(x=> ((float)Math.Round(x, decimals)).ToString()));
         }
         #endregion
     }

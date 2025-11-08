@@ -131,7 +131,29 @@ namespace JA.LinearAlgebra
         public static StackedVector operator /(StackedVector a, double b) => Scale(1/b, a);
         #endregion
 
+        #region Formatting
+        public override string ToString()
+            => ToString("g5");
+        public string ToString(string format)
+        {
+            string[] parts = new string[partitions.Count];
+            for (int i = 0; i<parts.Length; i++)
+            {
+                parts[i] = this[i].ToStringList(format);
+            }
+            return $"({string.Join("|", parts)})";
+        }
+        public string ToString(int decimals)
+        {
+            string[] parts = new string[partitions.Count];
+            for (int i = 0; i<parts.Length; i++)
+            {
+                parts[i] = this[i].ToStringList(decimals);
+            }
+            return $"({string.Join("|", parts)})";
+        }
 
+        #endregion
 
     }
 

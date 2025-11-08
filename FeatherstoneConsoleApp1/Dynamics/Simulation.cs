@@ -218,8 +218,9 @@ namespace JA.Dynamics
                 Matrix33 I_Ai = I[i_joint];
                 Vector33 I_pi = p[i_joint] - w[i_joint];
                 var children = childrens[i_joint];
-                for (int i_child = 0; i_child<children.Length; i_child++)
+                for (int index = 0; index<children.Length; index++)
                 {
+                    int i_child = children[index];
                     var child = joints[i_child];
                     Matrix33 An = I_A[i_child];
                     Vector33 dn = p_A[i_child];
@@ -269,7 +270,7 @@ namespace JA.Dynamics
                 a[i_joint]=s[i_joint]*qpp[i_joint]+ap;
                 f[i_joint]=I_A[i_joint]*a[i_joint]+pn;
             }
-
+            StackedVector check = new StackedVector(Enumerable.Repeat(6,n).ToArray());
             // Check Equation Compliance for each body
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
@@ -294,9 +295,9 @@ namespace JA.Dynamics
 
                 var children = childrens[i_joint];
                 Vector33 f_net = f[i_joint];
-                for (int i_child = 0; i_child<children.Length; i_child++)
+                for (int index = 0; index<children.Length; index++)
                 {
-                    f_net -= f[i_child];
+                    f_net -= f[children[index]];
                 }
                 f_net+=w[i_joint];
 
@@ -304,9 +305,14 @@ namespace JA.Dynamics
 
                 Vector33 f_check = f_net - f_inertial;
 
-                Trace.WriteLine($"#{i_joint} Force Balance = {f_net} - {f_inertial} = {f_check}");
+                check[i_joint]=f_check;
+
 
             }
+
+            Trace.WriteLine($"Force Balance = {check}");
+
+
             return qpp;
         }
         #endregion

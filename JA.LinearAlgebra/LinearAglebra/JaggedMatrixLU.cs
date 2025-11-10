@@ -327,8 +327,8 @@ namespace JA.LinearAlgebra
             //Create projection matrices
             // x_known = tr(P)*x        y_known = tr(R)*x
             // x_unknw = tr(R)*x        y_unknw = tr(P)*y
-            double[][] P=Factory.CreateMatrix(N, K);
-            double[][] R=Factory.CreateMatrix(N, N-K);
+            double[][] P=Factory.CreateJaggedArray(N, K);
+            double[][] R=Factory.CreateJaggedArray(N, N-K);
             bool[] known_x=new bool[N];
             // and Create full 'x' and 'y' arrays
             double[] x=new double[N];
@@ -355,8 +355,8 @@ namespace JA.LinearAlgebra
             {
                 if (x_known.Length==N) x=x_known;
                 if (y_known.Length==N) y=y_known;
-                var PT=P.MatrixTranspose();
-                var RT=R.MatrixTranspose();
+                var PT=P.JaggedTranspose();
+                var RT=R.JaggedTranspose();
                 x_known=PT.MatrixProduct(x);
                 y_known=RT.MatrixProduct(y);
                 var Axb=A.MatrixProduct(x).VectorAdd(b);

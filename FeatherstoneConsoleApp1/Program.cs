@@ -15,10 +15,12 @@ namespace JA
 
     internal class Program
     {
+        static readonly Random rng = new Random();
         static void Main(string[] args)
         {
-
-            TestSimulationTwo();
+            TestStackedVector();
+            TestMotorDrive();
+            //TestSimulationTwo();
         }
 
         static void TestSimulationOne()
@@ -26,7 +28,7 @@ namespace JA
             World sys = new World(UnitSystem.MKS);
             var steel = Material.Library(MaterialSpec.Steel);
             var linkage = MassProperties.Box(
-                steel.ConvertTo(UnitSystem.CMKS),
+                steel.ToConverted(UnitSystem.CMKS),
                 30f,    // length in cm
                 2f,     // height in cm
                 2.111f  // thickness in cm
@@ -57,7 +59,7 @@ namespace JA
             World sys = new World(UnitSystem.MKS, Vector3.Zero );
             var steel = Material.Library(MaterialSpec.Steel);
             var linkage = MassProperties.Box(
-                steel.ConvertTo(UnitSystem.CMKS),
+                steel.ToConverted(UnitSystem.CMKS),
                 30f,    // length in cm
                 2f,     // height in cm
                 2.111f  // thickness in cm
@@ -68,7 +70,7 @@ namespace JA
             //Console.WriteLine(linkage);
             var j1 = sys.NewPrismatic(Vector3.Zero, Vector3.UnitX);
             j1.InitialConditions=(0, 1);
-            j1.Motor=Joint.ConstantValue(5);
+            j1.Motor=JointBody.ConstantValue(5);
             var joint =  j1.AddRevolute(Vector3.Zero, Vector3.UnitZ);
             joint.InitialConditions=(Math.PI/6, 0);
             joint.AddMassProperties(linkage);
@@ -89,19 +91,82 @@ namespace JA
             }
         }
 
-        private static void TestStackedVector()
+        static void TestStackedVector()
         {
-            StackedVector stacekdVector = new StackedVector(3, 3);
-            stacekdVector[0]=1*Vector3.UnitX;
-            stacekdVector[1]=3*Vector3.UnitZ;
-            Console.WriteLine($"vector={stacekdVector.ToVector()}");
+            int  n = 2;
+            StackedVector x = StackedVector.FromSizeAndCount(3, n);
+            for (int i = 0; i<n; i++)
+            {
+                x[i]= Vector3.RandomVector(5);
+            }
+            Console.WriteLine(x.Show("vector, x="));
 
-            StackedMatrix stackedMatrix = StackedMatrix.CompatibleWith(stacekdVector);
-            stackedMatrix[0, 0]=Matrix3.Identity;
-            stackedMatrix[0, 1]=Matrix3.Zero;
-            stackedMatrix[1, 0]=-Matrix3.Identity;
-            stackedMatrix[1, 1]=Matrix3.Identity;
-            Console.WriteLine($"matrix={stackedMatrix.ToMatrix()}");
+            StackedMatrix A = StackedMatrix.FromSizeAndCountSquare(3, n);
+            for (int i = 0; i<n; i++)
+            {
+                for (int j = 0; j<n; j++)
+                {
+                    Vector3 a = Vector3.RandomVector(1);
+                    Vector3 b = Vector3.RandomVector(1);
+                    Matrix3 Aij = Vector3.Outer(a,b);
+                    if (i==j)
+                    {
+                        A[i, j]=1+Aij;
+                    }
+                    else
+                    {
+                        A[i, j]=-Aij;
+                    }
+                }
+            }
+            Console.WriteLine(A.Show("matrix, A="));
+
+            StackedVector y = A*x;
+
+            Console.WriteLine(y.Show("vector, y=A*x"));
+
+            StackedVector x_est = A.Solve(y, out var maxResidual); 
+
+            Console.WriteLine((y-A*x).Show("vector, y - A*x"));
+
+            Console.WriteLine($"max(y - A*x) = {maxResidual}");
+            Console.WriteLine();
+            Console.WriteLine($"check(A, x) => {A.IsCompatibleWithCols(x)}");
+            Console.WriteLine($"check(A, y) => {A.IsCompatibleWithRows(y)}");
+
+            //Console.WriteLine(Factory.Combine(y.Show("y"), "=", A.Show("A"), "*", x.Show("x")));
+
+        }
+
+        static void TestMotorDrive()
+        {
+
+            const double ω = 10;
+            const double A = 0.2;
+            {
+                Expr ex_t = Motor.t;
+                Expr ex_q = A*Expr.Sin(ω*ex_t);
+                Expr ex_qp = ex_q.PartialDerivative(ex_t);
+                Expr ex_qpp = ex_qp.PartialDerivative(ex_t);
+
+                Console.WriteLine($"t={ex_t}");
+                Console.WriteLine($"q={ex_q}");
+                Console.WriteLine($"qp={ex_qp}");
+                Console.WriteLine($"qpp={ex_qpp}");
+            }
+            Motor motor = Motor.FunctionOfTime(MotorDefined.Position,  (t)=> A*Expr.Sin(ω*t)); 
+
+            Console.WriteLine(motor);
+
+            Console.WriteLine($"{"t",12} {"qpp",16} {"actual",16} {"diff",16}");
+            const int n = 16;
+            for (int i = 0; i<=n; i++)
+            {
+                double t = i*Math.PI/(n*ω);
+                double qpp = motor.Drive[t,0,0];
+                double qpp_actual = -A*ω*ω*Math.Sin(ω*t);
+                Console.WriteLine($"{t,12:F4} {qpp,16:f6} {qpp_actual,16:f6} {qpp-qpp_actual,16:g6}");
+            }
         }
     }
 }

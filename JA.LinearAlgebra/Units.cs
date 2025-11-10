@@ -28,19 +28,19 @@ namespace JA
     }
     public interface ICanChangeUnits : IHasUnits
     {
-        void ConvertTo(UnitSystem target);
+        void DoConvert(UnitSystem target);
     }
     public interface ICanChangeUnits<T> : IHasUnits
     {
-        T ConvertTo(UnitSystem target);
+        T ToConverted(UnitSystem target);
     }
     public interface ICanConvertUnits
     {
-        void ConvertFromTo(UnitSystem units, UnitSystem target);
+        void DoConvertFrom(UnitSystem units, UnitSystem target);
     }
     public interface ICanConvertUnits<T> 
     {
-        T ConvertFromTo(UnitSystem units, UnitSystem target);
+        T ToConvertedFrom(UnitSystem units, UnitSystem target);
     }
 
     public enum UnitType

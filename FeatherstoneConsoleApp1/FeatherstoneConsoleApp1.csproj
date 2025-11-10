@@ -111,32 +111,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dynamics\Element.cs" />
+    <Compile Include="Dynamics\Motor.cs" />
     <Compile Include="Dynamics\Simulation.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="Dynamics\Joint.cs" />
+    <Compile Include="Dynamics\JointBody.cs" />
     <Compile Include="Dynamics\MassProperties.cs" />
-    <Compile Include="Geometry\Circle.cs" />
-    <Compile Include="Geometry\LineSegment.cs" />
-    <Compile Include="Geometry\Mesh.cs" />
-    <Compile Include="Geometry\Polygon.cs" />
-    <Compile Include="Geometry\Pose.cs" />
-    <Compile Include="Geometry\Triangle.cs" />
-    <Compile Include="LinearAlgebra\Factory.cs" />
-    <Compile Include="LinearAlgebra\JaggedMatrixLU.cs" />
-    <Compile Include="LinearAlgebra\LinearAlgebra.cs" />
-    <Compile Include="LinearAlgebra\Matrix.cs" />
-    <Compile Include="LinearAlgebra\ScrewCalculus\Matrix33.cs" />
-    <Compile Include="LinearAlgebra\ScrewCalculus\Vector33.cs" />
-    <Compile Include="LinearAlgebra\StackedMatrix.cs" />
-    <Compile Include="LinearAlgebra\StackedVector.cs" />
-    <Compile Include="LinearAlgebra\Vector.cs" />
-    <Compile Include="LinearAlgebra\VectorCalculus\Matrix3.cs" />
-    <Compile Include="LinearAlgebra\VectorCalculus\Pose3.cs" />
-    <Compile Include="LinearAlgebra\VectorCalculus\Quaternion3.cs" />
-    <Compile Include="LinearAlgebra\VectorCalculus\Vector3.cs" />
-    <Compile Include="Materials.cs" />
     <Compile Include="Dynamics\World.cs" />
-    <Compile Include="Units.cs" />
     <Compile Include="ITree.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -156,6 +136,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JA.LinearAlgebra\JA.LinearAlgebra.csproj">
+      <Project>{f796c3e1-530c-4f29-8f22-04137bf357d3}</Project>
+      <Name>JA.LinearAlgebra</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

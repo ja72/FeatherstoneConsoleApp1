@@ -132,7 +132,7 @@ namespace JA.LinearAlgebra
         }
         public Matrix Transpose()
         {
-            double[][] result = LinearAlgebra.MatrixTranspose(elements);
+            double[][] result = LinearAlgebra.JaggedTranspose(elements);
             return new Matrix(result);
         }
         #endregion

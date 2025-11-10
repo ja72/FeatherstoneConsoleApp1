@@ -8,7 +8,7 @@ using System.Numerics;
 
 using static System.Math;
 
-namespace JA.Geometry
+namespace JA.LinearAlgebra.Geometry
 {    
 
     [TypeConverter(typeof(ExpandableObjectConverter))]
@@ -40,7 +40,7 @@ namespace JA.Geometry
 
         public Mesh(UnitSystem units)
         {
-            this.Units = units;
+            Units= units;
             nodeList = new List<Vector3>();
             elementList = new List<Element>();
         }
@@ -54,13 +54,13 @@ namespace JA.Geometry
 
         Mesh(UnitSystem units, IEnumerable<Vector3> nodeList, IEnumerable<Element> elementList) : this(units)
         {
-            this.Units = units;
+            Units= units;
             this.nodeList= new List<Vector3>(nodeList);
             this.elementList= new List<Element>(elementList);
         }
 
         public UnitSystem Units { get; }
-        public Mesh ConvertTo(UnitSystem target)
+        public Mesh ToConverted(UnitSystem target)
         {
             if (Units != target)
             {
@@ -246,7 +246,7 @@ namespace JA.Geometry
         {
             x_axis = Vector3.Normalize(x_axis);
             Vector3 z_axis = center == Vector3.Zero ? Vector3.UnitZ : Vector3.Normalize(center);
-            Vector3 y_axis = Vector3.Cross(z_axis, x_axis);
+            var y_axis = Vector3.Cross(z_axis, x_axis);
 
             AddFace(color,
                 center - length / 2 * x_axis - width / 2 * y_axis,
@@ -309,9 +309,9 @@ namespace JA.Geometry
                 var n = mesh.nodeList[i];
                 float d = mesh.nodeList[i].Length();
                 (float x, float y, float z) = (n.X, n.Y, n.Z);
-                x = x.CapAbs(0, 1);
-                y = y.CapAbs(0, 1);
-                z = z.CapAbs(0, 1);
+                x =Min(1, Max(0, x));
+                y =Min(1, Max(0, y));
+                z =Min(1, Max(0, z));
                 n = new Vector3(x, y, z);
                 mesh.nodeList[i] = radius * Vector3.Normalize(n);
             }

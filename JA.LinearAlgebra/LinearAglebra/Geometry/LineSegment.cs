@@ -5,11 +5,9 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.SqlServer.Server;
-
 using static System.Math;
 
-namespace JA.Geometry
+namespace JA.LinearAlgebra.Geometry
 {
     public readonly struct LineSegment
     {

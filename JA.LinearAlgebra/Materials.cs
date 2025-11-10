@@ -65,7 +65,7 @@ namespace JA
         public float Poissons { get;  }
         public float CTE { get;  }
 
-        public Material ConvertTo(UnitSystem target)
+        public Material ToConverted(UnitSystem target)
         {
             if (Units != target)
             {
@@ -104,7 +104,7 @@ namespace JA
         {
             if (Spec == MaterialSpec.Custom || other.Spec == MaterialSpec.Custom)
             {
-                other = other.ConvertTo(Units);
+                other = other.ToConverted(Units);
 
                 return Density.Equals(other.Density)
                     && Elastic.Equals(other.Elastic)

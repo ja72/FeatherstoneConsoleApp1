@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Numerics;
 
-namespace JA.Geometry
+
+namespace JA.LinearAlgebra.Geometry
 {
 
     public readonly struct Circle

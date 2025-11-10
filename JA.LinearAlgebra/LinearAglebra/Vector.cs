@@ -57,7 +57,7 @@ namespace JA.LinearAlgebra
         {
             return new Vector(elements);
         }
-        public static explicit operator double[](Vector vector)
+        public static implicit operator double[](Vector vector)
         {
             return vector.elements;
         }
@@ -131,7 +131,7 @@ namespace JA.LinearAlgebra
             return new Vector( v.elements.VectorDivide(u.elements));
         }
         public double Dot(Vector other) { return elements.VectorDot(other.elements); }
-        public Matrix Outer(Vector other) { return new Matrix( elements.VectorOuter(other.elements)); }
+        public Matrix Outer(Vector other) { return new Matrix( elements.VectorOuterJagged(other.elements)); }
         public double Sum() { return elements.VectorElementSum(); }
         public double Norm2() { return elements.VectorNorm2(); }
         public double Norm1() { return elements.VectorNorm1(); }

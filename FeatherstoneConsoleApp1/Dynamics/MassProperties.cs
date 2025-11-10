@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.Geometry;
+using JA.LinearAlgebra.Geometry;
 using JA.LinearAlgebra.ScrewCalculus;
 using JA.LinearAlgebra.VectorCalculus;
 
@@ -299,7 +299,7 @@ namespace JA.Dynamics
         #endregion
 
         #region Units
-        public MassProperties ConvertTo(UnitSystem target)
+        public MassProperties ToConverted(UnitSystem target)
         {
             if (Units == target) return this;
 

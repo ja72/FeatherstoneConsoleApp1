@@ -12,37 +12,29 @@ namespace JA.Dynamics
     public class Simulation
     {
         readonly Vector3 gravity;
-        readonly Joint[] joints;
+        readonly JointBody[] joints;
         readonly int[] parents;
         readonly int[][] childrens;
         readonly List<(double t, StackedVector Y)> history;
         readonly double[] initialPos, initialVel;
 
-        public Vector3 Gravity => gravity;
-        public Joint[] Joints => joints;
-        public int[] Parents => parents;
-        public int[][] Childrens => childrens;
-        public UnitSystem Units { get; }
-
-        public IReadOnlyList<(double t, StackedVector Y)> History => history;
-        public double Time { get => history[history.Count-1].t; }
-        public StackedVector Current { get => history[history.Count-1].Y; }
+        #region Factory
         public Simulation(World world)
         {
             // Set everything to MKS for simulation
             this.Units=UnitSystem.MKS;
             float f_acc = Unit.Acceleration.Convert(world.units, Units);
-            gravity=f_acc*world.gravity;
-            joints=world.GetAllJoints().ToArray();
-            parents=world.GetParents(joints);
-            childrens=world.GetChildren(joints);
+            gravity =  f_acc*world.gravity;
+            joints  =  world.GetAllJoints(Units);
+            parents =  GetParents(joints);
+            childrens= GetChildren(joints);
 
             int n = joints.Length;
-            initialPos = new double[n];
-            initialVel = new double[n];
+            initialPos=new double[n];
+            initialVel=new double[n];
             for (int i = 0; i<n; i++)
             {
-                joints[i].ConvertTo(Units);
+                joints[i].DoConvert(Units);
                 var (q, qp)=joints[i].InitialConditions;
                 initialPos[i]=q;
                 initialVel[i]=qp;
@@ -52,6 +44,56 @@ namespace JA.Dynamics
             history.Add((0, new StackedVector(initialPos, initialVel)));
 
         }
+
+        static int[] GetParents(JointBody[] allJoints)
+        {
+            int n = allJoints.Length;
+            int[] parents = new int[n];
+            for (int i = 0; i<n; i++)
+            {
+                var joint = allJoints[i];
+                if (joint.Parent==null)
+                {
+                    parents[i]=-1;
+                }
+                else
+                {
+                    parents[i]=Array.IndexOf(allJoints, joint.Parent);
+                }
+            }
+            return parents;
+        }
+
+        static int[][] GetChildren(JointBody[] allJoints)
+        {
+            int n = allJoints.Length;
+            int[][] children = new int[n][];
+            for (int i = 0; i<n; i++)
+            {
+                var joint = allJoints[i];
+                children[i]=new int[joint.Children.Count];
+                for (int j = 0; j<joint.Children.Count; j++)
+                {
+                    children[i][j]=Array.IndexOf(allJoints, joint.Children[j]);
+                }
+            }
+            return children;
+        }
+
+        #endregion
+
+
+        #region Properties
+        public Vector3 Gravity => gravity;
+        public JointBody[] Joints => joints;
+        public int[] Parents => parents;
+        public int[][] Childrens => childrens;
+        public UnitSystem Units { get; }
+
+        public IReadOnlyList<(double t, StackedVector Y)> History => history;
+        public double Time { get => history[history.Count-1].t; }
+        public StackedVector Current { get => history[history.Count-1].Y; } 
+        #endregion
 
         #region Simulation
         public void Reset()
@@ -161,7 +203,7 @@ namespace JA.Dynamics
             Vector33[] w = new Vector33[n];
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
-                Joint joint = joints[i_joint];
+                JointBody joint = joints[i_joint];
                 int i_parent = parents[i_joint];
 
 
@@ -188,7 +230,7 @@ namespace JA.Dynamics
                 // m_i & -m_i \vec{c}_i\times \\
                 // m_i \vec{c}_i\times & \mathrm{I}_C - m_i \vec{c}_i\times \vec{c}_i\times \end{bmatrix}$$
 
-                I[i_joint]=joint.MassProperties.Spi(pos.orientation, cgi, out var Ic);
+                I[i_joint]=joint.MassProperties.Spi(pos.Orientation, cgi, out var Ic);
 
                 //tex: Joint Screw Axis $$s_i = \begin{bmatrix} \vec{r}_i \times \hat{z}_i \\ \hat{z}_i \end{bmatrix}$$
 
@@ -248,7 +290,7 @@ namespace JA.Dynamics
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
 
-                Joint joint = joints[i_joint];
+                JointBody joint = joints[i_joint];
                 int i_parent = parents[i_joint];
 
                 Vector33 ap = Vector33.Twist(-gravity);
@@ -274,7 +316,7 @@ namespace JA.Dynamics
             // Check Equation Compliance for each body
             for (int i_joint = 0; i_joint<n; i_joint++)
             {
-                Joint joint = joints[i_joint];
+                JointBody joint = joints[i_joint];
                 int i_parent = parents[i_joint];
 
 

@@ -3,8 +3,9 @@ using System.Drawing;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Linq;
+using JA.LinearAlgebra.Geometry;
 
-namespace JA.Geometry
+namespace JA.LinearAlgebra.Geometry
 {
     public readonly struct Triangle 
     {

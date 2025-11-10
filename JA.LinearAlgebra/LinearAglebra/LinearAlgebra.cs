@@ -231,9 +231,35 @@ namespace JA.LinearAlgebra
                 result[i]=row;
             }
         }
-        public static double[][] VectorOuter(this double[] vector, double[] other)
+        public static void VectorOuter(this double[] vector, double[] other, ref double[,] result)
         {
+            int n = result.GetLength(0);
+            int m = result.GetLength(1);
+
+            if (vector.Length!=n || other.Length!=m)
+            {
+                throw new IndexOutOfRangeException("Non conformal size in outer product result.");
+            }
+            for(int i=0; i<n; i++)
+            {
+                var row=new double[other.Length];
+                double vi=vector[i];
+                for(int j=0; j<row.Length; j++)
+                {
+                    row[j]=vi*other[j];
+                }
+                result.SetRow(i, row);
+            }
+        }
+        public static double[][] VectorOuterJagged(this double[] vector, double[] other)
+        {            
             var result=new double[vector.Length][];
+            VectorOuter(vector, other, ref result);
+            return result;
+        }
+        public static double[,] VectorOuterArray2(this double[] vector, double[] other)
+        {
+            var result=new double[vector.Length, other.Length ];
             VectorOuter(vector, other, ref result);
             return result;
         }
@@ -249,6 +275,49 @@ namespace JA.LinearAlgebra
                 if(Abs(vector[i]-other[i])>epsilon)
                     return false;
             return true;
+        }
+
+        #endregion
+
+        #region Double Array2 Matrices
+        /// <summary>
+        /// Matrix-Vector product y=A*x
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public static double[] MatrixProduct(this double[,] matrix, double[] other)
+        {
+            if(matrix.Length==0) return new double[0];
+            int aRows=matrix.GetLength(0); int aCols=matrix.GetLength(1);
+            int bRows=other.Length;
+            if(aCols!=bRows)
+                throw new Exception("Non-conformable matrices in MatrixProduct");
+            double[] result=new double[aRows];
+            for(int i=0; i<aRows; ++i) // each row of A
+                for(int k=0; k<aCols; ++k)
+                    result[i]+=matrix[i,k]*other[k];
+            return result;
+        }
+        /// <summary>
+        /// Matrix-Matrix product Y=A*X
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public static double[,] MatrixProduct(this double[,] matrix, double[,] other)
+        {
+            if(matrix.Length==0) { return new double[0,0]; }
+            int aRows=matrix.GetLength(1); int aCols=matrix.GetLength(1);
+            int bRows=other.GetLength(0);  int bCols=other.GetLength(1);
+            if(aCols!=bRows)
+                throw new Exception("Non-conformable matrices in MatrixProduct");
+            var result=Factory.CreateArray2(aRows, bCols);
+            for(int i=0; i<aRows; ++i) // each row of A
+                for(int j=0; j<bCols; ++j) // each col of B
+                    for(int k=0; k<aCols; ++k)
+                        result[i,j]+=matrix[i,k]*other[k,j];
+            return result;
         }
 
         #endregion
@@ -276,7 +345,7 @@ namespace JA.LinearAlgebra
             }
             return max;
         }
-        static bool MatrixTranspose(this double[][] matrix, ref double[][] t_matrix)
+        static bool JaggedTranspose(this double[][] matrix, ref double[][] t_matrix)
         {
             int n=matrix.Length;
             int m=matrix[0].Length;
@@ -292,12 +361,12 @@ namespace JA.LinearAlgebra
             }
             return true;
         }
-        public static double[][] MatrixTranspose(this double[][] matrix)
+        public static double[][] JaggedTranspose(this double[][] matrix)
         {
             int n=matrix.Length;
             int m=matrix[0].Length;
-            double[][] t_matrix = Factory.CreateMatrix(m,n);
-            MatrixTranspose(matrix,ref t_matrix);
+            double[][] t_matrix = Factory.CreateJaggedArray(m,n);
+            JaggedTranspose(matrix,ref t_matrix);
             return t_matrix;
         }
 
@@ -324,7 +393,7 @@ namespace JA.LinearAlgebra
         }
         public static double[][] MatrixAdd(this double[][] matrix, double[][] other, double other_factor=1)
         {
-            var result=Factory.CreateMatrix(matrix.Length, matrix[0].Length);
+            var result=Factory.CreateJaggedArray(matrix.Length, matrix[0].Length);
             MatrixAdd(matrix, other, ref result, other_factor);
             return result;
         }
@@ -370,7 +439,7 @@ namespace JA.LinearAlgebra
         {
             int rows=matrix.Length;
             int cols=matrix[0].Length;
-            var result=Factory.CreateMatrix(rows, cols);
+            var result=Factory.CreateJaggedArray(rows, cols);
             for(int i=0; i<rows; i++)
             {
                 Array.Copy(matrix[i], result[i], cols);
@@ -425,7 +494,7 @@ namespace JA.LinearAlgebra
             int bRows=other.Length; int bCols=other[0].Length;
             if(aCols!=bRows)
                 throw new Exception("Non-conformable matrices in MatrixProduct");
-            var result=Factory.CreateMatrix(aRows, bCols);
+            var result=Factory.CreateJaggedArray(aRows, bCols);
             for(int i=0; i<aRows; ++i) // each row of A
                 for(int j=0; j<bCols; ++j) // each col of B
                     for(int k=0; k<aCols; ++k)

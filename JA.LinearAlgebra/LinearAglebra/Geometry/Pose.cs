@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JA.Geometry
+namespace JA.LinearAlgebra.Geometry
 {
     public class Pose
     {

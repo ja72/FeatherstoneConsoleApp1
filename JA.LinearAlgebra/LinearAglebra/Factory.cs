@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 
 namespace JA.LinearAlgebra
@@ -95,6 +97,82 @@ namespace JA.LinearAlgebra
 
         #endregion
 
+        #region Generic Jagged Matrix
+        public static T[][] CreateJaggedArray<T>(int rows, int cols)
+        {
+            var matrix=new T[rows][];
+            for(int i=0; i<rows; i++)
+            {
+                matrix[i]=new T[cols];
+            }
+            return matrix;
+        }
+        public static T[][] CreateJaggedArray<T>(int rows, int cols, T fill)
+        {
+            var matrix=new T[rows][];
+            for(int i=0; i<rows; i++)
+            {
+                var row = new T[cols];
+                for (int j = 0; j<cols; j++)
+                {
+                    row[j]=fill;
+                }
+                matrix[i]=row;
+            }
+            return matrix;
+        }
+        public static T[][] CreateJaggedArray<T>(int rows, int cols, Func<int,int,T> init)
+        {
+            var matrix=new T[rows][];
+            for(int i=0; i<rows; i++)
+            {
+                var row = new T[cols];
+                for (int j = 0; j<cols; j++)
+                {
+                    row[j]=init(i,j);
+                }
+                matrix[i]=row;
+            }
+            return matrix;
+        }
+
+        static bool JaggedTranspose<T>(this T[][] matrix, ref T[][] t_matrix, T empty  =default(T))
+        {
+            int n=matrix.Length;
+            int m = matrix.Max(u=> u.Length);
+            if (t_matrix.Length!=m)
+            {
+                return false;
+            }
+            for(int i=0; i<m; i++)
+            {
+                var row=new T[n];
+                for(int j=0; j<n; j++)
+                {
+                    if (i<matrix[j].Length)
+                    {
+                        row[j]=matrix[j][i];
+                    }
+                    else
+                    {
+                        row[j]=empty;
+                    }
+                }
+                t_matrix[i]=row;
+            }
+            return true;
+        }
+        public static T[][] JaggedTranspose<T>(this T[][] matrix)
+        {
+            int n=matrix.Length;
+            int m = matrix.Max(u=> u.Length);
+            T[][] t_matrix = Factory.CreateJaggedArray<T>(m,n);
+            JaggedTranspose(matrix,ref t_matrix);
+            return t_matrix;
+        }
+
+        #endregion
+
         #region Vector
         public static double[] CreateVector(int size)
         {
@@ -177,8 +255,8 @@ namespace JA.LinearAlgebra
         }
         #endregion
 
-        #region Matrix
-        public static double[][] CreateMatrix(int rows, int cols)
+        #region Jagged Double Matrix
+        public static double[][] CreateJaggedArray(int rows, int cols)
         {
             var matrix=new double[rows][];
             for(int i=0; i<rows; i++)
@@ -187,7 +265,7 @@ namespace JA.LinearAlgebra
             }
             return matrix;
         }
-        public static double[][] CreateMatrix(int rows, int cols, params double[] elements)
+        public static double[][] CreateJaggedArray(int rows, int cols, params double[] elements)
         {
             var matrix=new double[rows][];
             int k=0;
@@ -200,7 +278,7 @@ namespace JA.LinearAlgebra
             }
             return matrix;
         }
-        public static double[][] CreateMatrix(int rows, int cols, Func<int, int, double> init)
+        public static double[][] CreateJaggedArray(int rows, int cols, Func<int, int, double> init)
         {
             var matrix=new double[rows][];
             for(int i=0; i<rows; i++)
@@ -215,7 +293,7 @@ namespace JA.LinearAlgebra
             return matrix;
         }
 
-        public static double[][] CreateIdentityMatrix(int rows, int cols=0, double scale=1)
+        public static double[][] CreateJaggedIdentityMatrix(int rows, int cols=0, double scale=1)
         {            
             if(cols==0) { cols=rows; }
             var matrix=new double[rows][];
@@ -230,7 +308,7 @@ namespace JA.LinearAlgebra
             }
             return matrix;
         }
-        public static double[][] CreateDiagonalMatrix(double[] diag_values)
+        public static double[][] CreateJaggedDiagonalMatrix(double[] diag_values)
         {
             var matrix=new double[diag_values.Length][];
             for(int i=0; i<matrix.Length; i++)
@@ -242,7 +320,7 @@ namespace JA.LinearAlgebra
             return matrix;
         }
 
-        public static double[][] CreateRandomMatrix(int rows, int cols, double min_value=0, double max_value=1)
+        public static double[][] CreateJaggedRandomMatrix(int rows, int cols, double min_value=0, double max_value=1)
         {
             var matrix=new double[rows][];
             for(int i=0; i<matrix.Length; i++)
@@ -250,6 +328,56 @@ namespace JA.LinearAlgebra
                 matrix[i]=CreateRandomVector(cols, min_value, max_value);
             }
             return matrix;
+        }
+        #endregion
+
+        #region Array Matrix
+        public static double[,] CreateArray2(int rows, int cols)
+        {
+            var matrix=new double[rows, cols];
+            return matrix;
+        }
+        public static double[,] CreateArray2(int rows, int cols, params double[] elements)
+        {
+            return elements.ToArray2(rows,cols);
+        }
+        public static double[,] CreateArray2(int rows, int cols, Func<int, int, double> init)
+        {
+            var matrix=new double[rows,cols];
+            for(int i=0; i<rows; i++)
+            {
+                for(int j=0; j<cols; j++)
+                {
+                    matrix[i, j]=init(i, j);
+                }
+            }
+            return matrix;
+        }
+
+        public static double[,] CreateIdentityArray2(int rows, int cols=0, double scale=1)
+        {            
+            if(cols==0) { cols=rows; }
+            var matrix=new double[rows,cols];
+            for(int i=0; i<rows; i++)
+            {
+                matrix[i, i]=1;
+            }
+            return matrix;
+        }
+        public static double[,] CreateDiagonalArray2(double[] diag_values)
+        {
+            var matrix=new double[diag_values.Length, diag_values.Length];
+            for(int i=0; i<matrix.Length; i++)
+            {
+                matrix[i,i]=diag_values[i];
+            }
+            return matrix;
+        }
+
+        public static double[,] CreateRandomArray2(int rows, int cols, double min_value=0, double max_value=1)
+        {
+            var data = CreateRandomVector(rows*cols, min_value, max_value);
+            return data.ToArray2(rows, cols);
         }
         #endregion
 
@@ -406,6 +534,31 @@ namespace JA.LinearAlgebra
             return result;
         }
 
+        static bool MatrixTranspose<T>(this T[][] matrix, ref T[][] t_matrix)
+        {
+            int n=matrix.Length;
+            int m=matrix[0].Length;
+            if(t_matrix.Length!=m) return false;
+            for(int i=0; i<m; i++)
+            {
+                var row=new T[n];
+                for(int j=0; j<n; j++)
+                {
+                    row[j]=matrix[j][i];
+                }
+                t_matrix[i]=row;
+            }
+            return true;
+        }
+        public static T[][] MatrixTranspose<T>(this T[][] matrix)
+        {
+            int n=matrix.Length;
+            int m=matrix[0].Length;
+            T[][] t_matrix = Factory.CreateJaggedArray<T>(m,n);
+            MatrixTranspose(matrix,ref t_matrix);
+            return t_matrix;
+        }
+
         #endregion
 
         #region Formatting
@@ -417,6 +570,225 @@ namespace JA.LinearAlgebra
         {
             return string.Join(delimiter, elements.Select(x=> ((float)Math.Round(x, decimals)).ToString()));
         }
+        public static string Show(this Vector values, string title = "", string format = "g4")
+            => Show(values.ToArray(), title, format);
+        public static string Show(this double[] values, string title = "", string format = "g4")
+        {
+            StringBuilder sb = new StringBuilder(values.Length * 20 );
+            if (!string.IsNullOrEmpty(title))
+            {
+                sb.AppendLine(title);
+            }
+
+            string[] parts = values.Select((x)=> x.ToString(format)).ToArray();
+            const int minWidth = 3;
+            int width = Math.Max(minWidth, parts.Max((s)=>s.Length));
+
+            for (int i = 0; i<parts.Length; i++)
+            {
+                var item = $"| {parts[i].PadLeft(width)} |";
+                sb.AppendLine(item);
+            }
+            sb.AppendLine();
+            return sb.ToString();
+        }
+        public static string Show(this StackedVector values, string title = "", string format = "g4")
+        {
+            int partCount = values.Partitions.Count;
+            StringBuilder sb = new StringBuilder( (values.Size+partCount-1) * 20 );
+            if (!string.IsNullOrEmpty(title))
+            {
+                sb.AppendLine(title);
+            }
+            var parts = new List<string>();
+            int index = 0;
+            const int minWidth = 3;
+            int width = minWidth;
+            for (int partIndex = 0; partIndex<partCount; partIndex++)
+            {
+                for (int i = 0; i<values.Partitions[partIndex]; i++)
+                {
+                    string item = values.Elements[index].ToString(format);
+                    width=Math.Max(width, item.Length);
+                    parts.Add(item);
+                    index++;
+                }
+                if (partIndex<partCount-1)
+                {
+                    parts.Add(string.Empty);
+                }
+            }
+            var split = new string('-', width);
+
+            for (int i = 0; i<parts.Count; i++)
+            {
+                if (parts[i].Length>0)
+                {
+                    sb.AppendLine($"| {parts[i].PadLeft(width)} |");
+                }
+                else
+                {
+                    sb.AppendLine($"| {split} |");
+                }
+            }
+            sb.AppendLine();
+            return sb.ToString();
+        }
+        public static string Show(this Matrix values, string title = "", string format = "g4")
+            => Show(values.ToJaggedArray(), title, format); 
+        public static string Show(this double[][] values, string title = "", string format = "g4")
+        {
+            int n = values.Length;
+            int m = n>0 ? values[0].Length : 0;
+            StringBuilder sb = new StringBuilder(n * m * 20 );
+            if (!string.IsNullOrEmpty(title))
+            {
+                sb.AppendLine(title);
+            }
+            string[][] parts = values.Select((row)=> row.Select(x=>x.ToString(format)).ToArray()).ToArray();
+            const int minWidth = 3;
+            int[] width = Enumerable.Repeat(minWidth, m).ToArray();
+            for (int i = 0; i<n; i++)
+            {
+                string[] row = parts[i];
+                for (int j = 0; j<row.Length; j++)
+                {
+                    width[j]=Math.Max(width[j], row[j].Length);
+                }
+            }
+
+            for (int i = 0; i<n; i++)
+            {
+                string[] row = parts[i];
+                sb.Append("| ");
+                for (int j = 0; j<row.Length; j++)
+                {
+                    sb.Append($"{row[j].PadLeft(width[j])} ");
+                }
+                sb.AppendLine("|");
+            }
+
+            return sb.ToString();
+        }
+        public static string Show(this StackedMatrix values, string title = "", string format = "g4")
+        {
+            int rowPartCount = values.RowPartitions.Count;
+            int colPartCount = values.ColPartitions.Count;
+            int n = values.Rows;
+            int m = values.Columns;
+            StringBuilder sb = new StringBuilder((n * m + rowPartCount-1) * 20 );
+            if (!string.IsNullOrEmpty(title))
+            {
+                sb.AppendLine(title);
+            }
+            List<string[]> parts = new List<string[]>();
+            const int minWidth = 3;
+            int[] width = Enumerable.Repeat(minWidth, m).ToArray();
+            int rowIndex = 0;
+            for (int rowPartIndex = 0; rowPartIndex<rowPartCount; rowPartIndex++)
+            {
+                for (int i = 0; i<values.RowPartitions[rowPartIndex]; i++)
+                {
+                    int colIndex = 0;
+                    List<string> row = new List<string>(n+values.ColPartitions.Count);
+                    for (int colPartIndex = 0; colPartIndex<colPartCount; colPartIndex++)
+                    {
+                        for (int j = 0; j<values.ColPartitions[colPartIndex]; j++)
+                        {
+                            string item = values.Elements[rowIndex, colIndex].ToString(format);
+                            row.Add(item);
+                            width[colIndex]=Math.Max(width[colIndex], item.Length);
+                            colIndex++;
+                        }
+                        if (colPartIndex<colPartCount-1)
+                        {
+                            row.Add(string.Empty);
+                        }
+                    }
+                    parts.Add(row.ToArray());
+                    rowIndex++;
+                }
+                if (rowPartIndex<rowPartCount-1)
+                {
+                    int colIndex = 0;
+                    List<string> row = new List<string>(n+values.ColPartitions.Count);
+                    for (int colPartIndex = 0; colPartIndex<colPartCount; colPartIndex++)
+                    {
+                        for (int j = 0; j<values.ColPartitions[colPartIndex]; j++)
+                        {
+                            string item = new string('-', width[colIndex]);
+                            row.Add(item);
+                            colIndex++;
+                        }
+                        if (colPartIndex<colPartCount-1)
+                        {
+                            row.Add(string.Empty);
+                        }
+                    }
+                    parts.Add(row.ToArray());
+                }
+
+            }
+
+            for (int i = 0; i<parts.Count; i++)
+            {
+                var row = parts[i];
+                sb.Append("| ");
+                int colIndex = 0;
+                for (int j = 0; j<row.Length; j++)
+                {
+                    if (row[j].Length>0)
+                    {
+                        sb.Append($"{row[j].PadLeft(width[colIndex++])} ");
+                    }
+                    else
+                    {
+                        sb.Append(" | ");
+                    }
+                }
+                sb.AppendLine("|");
+            }
+
+            return sb.ToString();
+        }
+
+        public static string Combine(params string[] elements)
+        {
+            string[][] parts = new string[elements.Length][];
+            int rows = 0;
+            for (int i = 0; i<parts.Length; i++)
+            {
+                // [ "| a |" , "| b |" ]
+                // [ "| c |" , "| d |" ]
+                var items = new List<string>();
+                var tr = new StringReader(elements[i]);
+                while (tr.Peek() >= 0)
+                {
+                    items.Add( tr.ReadLine() );
+                }
+                parts[i]=items.ToArray();
+                rows=Math.Max(rows, items.Count);
+            }
+            string[][] show = new string[rows][];
+
+            JaggedTranspose(parts, ref show, string.Empty);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i<show.Length; i++)
+            {
+                // [ "| a |" , "| c |" ]
+                // [ "| b |" , "| d |" ]
+                string[] row = show[i];
+                for (int j = 0; j<row.Length; j++)
+                {
+                    sb.Append($"{row[j]} ");
+                }
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
         #endregion
     }
 }

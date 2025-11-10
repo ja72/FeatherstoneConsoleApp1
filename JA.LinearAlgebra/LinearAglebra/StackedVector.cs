@@ -10,25 +10,31 @@ namespace JA.LinearAlgebra
         readonly IReadOnlyList<int> partitions;
         readonly int size;
 
+        #region Factory
         public StackedVector(params int[] partition_sizes)
-            : this( partition_sizes.ToList() ) { }
-        public StackedVector(IReadOnlyList<int> partition_sizes)            
+            : this(partition_sizes.ToList()) { }
+        public StackedVector(IReadOnlyList<int> partition_sizes)
         {
-            this.partitions=partition_sizes;      
+            this.partitions=partition_sizes;
             this.size=partition_sizes.Sum();
             this.elements=new double[size];
         }
-        public StackedVector(double[] values, params int[] partition_sizes)
+        public StackedVector(IReadOnlyList<int> partition_sizes, double[] values)
         {
             this.partitions=partition_sizes;
-            int n = partition_sizes.Sum();
-            if (n!=values.Length)
+            this.size=partition_sizes.Sum();
+            if (size==values.Length)
             {
-                throw new ArgumentException("Size mismach", nameof(partition_sizes));
+                this.elements=values;
             }
-            this.size=n;
-            this.elements=values;
+            else
+            {
+                this.elements=new double[size];
+                values.CopyTo(elements, 0);
+            }
         }
+        public StackedVector(double[] values, params int[] partition_sizes)
+            : this(partition_sizes, values) { }
         public StackedVector(params double[][] partitions)
         {
             int n = partitions.Length;
@@ -44,15 +50,23 @@ namespace JA.LinearAlgebra
             this.elements=Factory.ToArray(values);
         }
         public StackedVector(params Vector[] partitions)
-            : this( partitions.Select(v => v.Elements ).ToArray() )
+            : this(partitions.Select(v => v.Elements).ToArray()) 
         { }
-        public static implicit operator Vector(StackedVector stacked) => stacked.ToVector();
+        public static StackedVector CompatibleWith(StackedVector vector)
+            => new StackedVector(vector.partitions);
+        public static StackedVector FromSizeAndCount(int size, int count)
+            => new StackedVector(Enumerable.Repeat(size, count).ToArray());
+
+        #endregion
+
+        #region Properties
         public IReadOnlyList<int> Partitions => partitions;
+        public double[] Elements => elements;
         public int Size { get => size; }
         public Vector ToVector() => new Vector(elements);
         public int GetOffset(int partitionIndex)
         {
-            return  partitions.Take(partitionIndex).Sum();
+            return partitions.Take(partitionIndex).Sum();
         }
         public double[] this[int partitionIndex]
         {
@@ -71,20 +85,35 @@ namespace JA.LinearAlgebra
                 Array.Copy(value, 0, elements, offset, size);
             }
         }
+
+        public bool IsCompatibleWith(StackedVector other)
+        {
+            return Enumerable.SequenceEqual(partitions, other.partitions);
+        }
+
+        #endregion
+
+        #region Conversions
+        public static implicit operator Vector(StackedVector stacked) => stacked.ToVector();
         public double[] ToArray() => elements;
         public Vector[] ToVectorArray()
         {
             Vector[] result = new Vector[partitions.Count];
             for (int i = 0; i<partitions.Count; i++)
             {
-                result[i] = new Vector(this[i]);
+                result[i]=new Vector(this[i]);
             }
             return result;
-        }
+        }  
+        #endregion
 
         #region Algebra
         public static StackedVector Add(StackedVector A, StackedVector B)
         {
+            if (!A.IsCompatibleWith(B))
+            {
+                throw new ArgumentException("Incompatible Partitions.", nameof(B));
+            }
             var result = new double[A.elements.Length];
             for (int i = 0; i<result.Length; i++)
             {
@@ -94,6 +123,10 @@ namespace JA.LinearAlgebra
         }
         public static StackedVector Subtract(StackedVector A, StackedVector B)
         {
+            if (!A.IsCompatibleWith(B))
+            {
+                throw new ArgumentException("Incompatible Partitions.", nameof(B));
+            }
             var result = new double[A.elements.Length];
             for (int i = 0; i<result.Length; i++)
             {
@@ -118,6 +151,20 @@ namespace JA.LinearAlgebra
                 result[i]=factor*A.elements[i];
             }
             return new StackedVector(result, A.partitions.ToArray());
+        }
+        public static double Dot(StackedVector A, StackedVector B)
+        {
+            if (!A.IsCompatibleWith(B))
+            {
+                throw new ArgumentException("Incompatible Partitions.", nameof(B));
+            }
+            return LinearAlgebra.VectorDot(A.elements, B.elements);
+        }
+        public static StackedMatrix Outer(StackedVector A, StackedVector B)
+        {
+            var values = LinearAlgebra.VectorOuterArray2(A.elements, B.elements);
+
+            return new StackedMatrix(A.partitions, B.partitions, values);
         }
         #endregion
 

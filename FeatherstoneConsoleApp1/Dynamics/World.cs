@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 using JA.LinearAlgebra.VectorCalculus;
 
+using static JA.Dynamics.Element;
+
 namespace JA.Dynamics
 {
+
     public class World : ICanChangeUnits
     {
         internal UnitSystem units;
         internal Vector3 gravity;
-        internal readonly List<Joint> rootJoints;
+        internal readonly List<JointBody> rootJoints;
+        internal readonly List<Element> elements;
 
         #region Factor
         public World(UnitSystem units)
@@ -21,91 +26,113 @@ namespace JA.Dynamics
         {
             this.units=units;
             this.gravity=gravity;
-            this.rootJoints=new List<Joint>();
+            this.rootJoints=new List<JointBody>();
+            this.elements=new List<Element>();
         }
         #endregion
 
         #region Property
         public UnitSystem Units { get => units; }
         public Vector3 Gravity { get => gravity; set => gravity=value; }
-        public IReadOnlyList<Joint> RootJoints => rootJoints;
+        public IReadOnlyList<JointBody> RootJoints => rootJoints;
 
-        public void ConvertTo(UnitSystem target)
+        public void DoConvert(UnitSystem target)
         {
 
         }
 
         #endregion
 
+        #region Elements
+        public Element.Link NewLink(Pose3 position, MassProperties massProperties)
+        {
+            var link = new Element.Link(position, massProperties);
+            link.DoConvert(Units);
+            elements.Add(link);
+            return link;
+        }
+        public Element.Link NewLink(Pose3 position)
+        {
+            var link = new Element.Link(position, MassProperties.Empty);
+            link.DoConvert(Units);
+            elements.Add(link);
+            return link;
+        }
+        public Element.Joint NewPrismatic(Vector3 axis)
+        {
+            var joint = new Element.Joint(JointType.Prismatic, axis);
+            joint.DoConvert(Units);
+            elements.Add(joint);
+            return joint;
+        }
+        public Element.Joint NewRevolute(Vector3 axis)
+        {
+            var joint = new Element.Joint(JointType.Revolute, axis);
+            joint.DoConvert(Units);
+            elements.Add(joint);
+            return joint;
+        }
+        public Element.Joint NewScrew(Vector3 axis, double pitch)
+        {
+            var joint = new Element.Joint(JointType.Screw, axis, pitch);
+            joint.DoConvert(Units);
+            elements.Add(joint);
+            return joint;
+        } 
+        #endregion
+
         #region Structure
-        public Joint NewScrew(Pose3 localPosition, Vector3 localAxis, double pitch)
+        public JointBody NewScrew(Pose3 localPosition, Vector3 localAxis, double pitch)
             => NewScrew(Units, localPosition, localAxis, pitch);
-        public Joint NewScrew(UnitSystem units, Pose3 localPosition, Vector3 localAxis, double pitch)
+        public JointBody NewScrew(UnitSystem units, Pose3 localPosition, Vector3 localAxis, double pitch)
         {
-            var joint = Joint.NewScrew(units, localPosition, localAxis, pitch);
+            var joint = JointBody.NewScrew(units, localPosition, localAxis, pitch);
             rootJoints.Add(joint);
             return joint;
         }
-        public Joint NewRevolute(Pose3 localPosition, Vector3 localAxis)
+        public JointBody NewRevolute(Pose3 localPosition, Vector3 localAxis)
             => NewRevolute(Units, localPosition, localAxis);
-        public Joint NewRevolute(UnitSystem units, Pose3 localPosition, Vector3 localAxis)
+        public JointBody NewRevolute(UnitSystem units, Pose3 localPosition, Vector3 localAxis)
         {
-            var joint = Joint.NewRevolute(units, localPosition, localAxis);
+            var joint = JointBody.NewRevolute(units, localPosition, localAxis);
             rootJoints.Add(joint);
             return joint;
         }
-        public Joint NewPrismatic(Pose3 localPosition, Vector3 localAxis)
+        public JointBody NewPrismatic(Pose3 localPosition, Vector3 localAxis)
             => NewPrismatic(Units, localPosition, localAxis);
-        public Joint NewPrismatic(UnitSystem units, Pose3 localPosition, Vector3 localAxis)
+        public JointBody NewPrismatic(UnitSystem units, Pose3 localPosition, Vector3 localAxis)
         {
-            var joint = Joint.NewPrismatic(units, localPosition, localAxis);
+            var joint = JointBody.NewPrismatic(units, localPosition, localAxis);
             rootJoints.Add(joint);
             return joint;
         }
 
-        public List<Joint> GetAllJoints()
+        public void Transverse(Action<JointBody> action)
         {
-            var allJoints=new List<Joint>();
-            foreach (var joint in rootJoints)
+            foreach (var item in rootJoints)
             {
-                joint.Traverse( (j)=> allJoints.Add(j) );
+                item.Traverse(action);
             }
-            return allJoints;
+        }
+        public R Transverse<R>(R initialValue, Func<JointBody, R> operation)
+        {
+            R result = initialValue;
+            foreach (var item in rootJoints)
+            {
+                result = item.Traverse(result, operation);
+            }
+            return result;
         }
 
-        internal int[] GetParents(Joint[] allJoints)
+        public JointBody[] GetAllJoints(UnitSystem units)
         {
-            int n = allJoints.Length;
-            int[] parents = new int[n];
-            for (int i = 0; i<n; i++)
+            var list = new List<JointBody>();
+            Transverse((jnt) =>
             {
-                var joint = allJoints[i];
-                if (joint.Parent==null)
-                {
-                    parents[i]=-1;
-                }
-                else
-                {
-                    parents[i]=Array.IndexOf(allJoints, joint.Parent);
-                }
-            }
-            return parents;
-        }
-
-        internal int[][] GetChildren(Joint[] allJoints)
-        {
-            int n = allJoints.Length;
-            int[][] children = new int[n][];
-            for (int i = 0; i<n; i++)
-            {
-                var joint = allJoints[i];
-                children[i]=new int[joint.Children.Count];
-                for (int j = 0; j<joint.Children.Count; j++)
-                {
-                    children[i][j]=Array.IndexOf(allJoints, joint.Children[j]);
-                }
-            }
-            return children;
+                jnt.DoConvert(units);
+                list.Add(jnt);
+            });
+            return list.ToArray();
         }
 
         #endregion

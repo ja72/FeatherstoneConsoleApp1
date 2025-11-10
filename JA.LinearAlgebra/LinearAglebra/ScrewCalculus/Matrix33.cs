@@ -203,7 +203,15 @@ namespace JA.LinearAlgebra.ScrewCalculus
             {a21.m31, a21.m32, a21.m33, a22.m31, a22.m32, a22.m33 },
         };
 
-        public double[][] ToJaggedArray() => Factory.CreateArray2(6, 6, ToArray());
+        public double[][] ToJaggedArray() => new double[][] {
+            new double[]{a11.m11, a11.m12, a11.m13, a12.m11, a12.m12, a12.m13 },
+            new double[]{a11.m21, a11.m22, a11.m23, a12.m21, a12.m22, a12.m23 },
+            new double[]{a11.m31, a11.m32, a11.m33, a12.m31, a12.m32, a12.m33 },
+            new double[]{a21.m11, a21.m12, a21.m13, a22.m11, a22.m12, a22.m13 },
+            new double[]{a21.m21, a21.m22, a21.m23, a22.m21, a22.m22, a22.m23 },
+            new double[]{a21.m31, a21.m32, a21.m33, a22.m31, a22.m32, a22.m33 },
+        };
+
         #endregion
 
     }

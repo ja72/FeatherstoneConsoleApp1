@@ -222,13 +222,13 @@ namespace JA.Dynamics
             : this(parent, type, localPosition, localAxis, pitch, MassProperties.Zero)
         { }
         JointBody(UnitSystem units, JointType type, Pose3 localPosition, Vector3 localAxis, double pitch, MassProperties massProperties)
-            : base(units, type, localAxis, localAxis, pitch, massProperties)
+            : base(units, type, localPosition, localAxis, pitch, massProperties)
         {
             this.parent=null;
             this.children=new List<JointBody>();
         }
         JointBody(JointBody parent, JointType type, Pose3 localPosition, Vector3 localAxis, double pitch, MassProperties massProperties)
-            : base(parent?.units??UnitSystem.MKS, type, localAxis, localAxis, pitch, massProperties)
+            : base(parent?.units??UnitSystem.MKS, type, localPosition, localAxis, pitch, massProperties)
         {
             this.parent=parent;
             this.children=new List<JointBody>();
@@ -252,6 +252,7 @@ namespace JA.Dynamics
             => new JointBody(units, JointType.Prismatic, localPosition, localAxis, double.PositiveInfinity);
 
         #endregion
+
         #region Properties
 
         public JointBody Parent
@@ -288,6 +289,7 @@ namespace JA.Dynamics
         }
 
         #endregion
+
         #region Mechanics
         #endregion
 

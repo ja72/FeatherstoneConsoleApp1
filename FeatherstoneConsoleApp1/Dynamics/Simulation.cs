@@ -82,7 +82,6 @@ namespace JA.Dynamics
 
         #endregion
 
-
         #region Properties
         public Vector3 Gravity => gravity;
         public JointBody[] Joints => joints;
@@ -139,6 +138,8 @@ namespace JA.Dynamics
         }
         public (double t, StackedVector Y) RungeKutta(double t, StackedVector Y, double step)
         {
+            // Y = { q, qp}
+            // Yp = d/dt Y = f(t,Y)
             var K0 = GetRate(t, Y);
             var K1 = GetRate(t + step/2, Y + step/2*K0);
             var K2 = GetRate(t + step/2, Y + step/2*K1);

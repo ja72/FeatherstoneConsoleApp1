@@ -190,7 +190,6 @@ namespace JA.LinearAlgebra.ScrewCalculus
             => Vector3.Cross(linear, angular)/linear.MagnitudeSquared;
         #endregion
 
-
         #region Properties
         public Vector3 Linear => this.linear;
         public Vector3 Angular => this.angular;

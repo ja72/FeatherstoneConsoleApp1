@@ -6,18 +6,17 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.LinearAlgebra.Geometry;
-using JA.LinearAlgebra.ScrewCalculus;
-using JA.LinearAlgebra.VectorCalculus;
 
 namespace JA.Dynamics
 {
-    using Vector3 = Vector3;
-    using Matrix3 = Matrix3;
-    using Quaternion3 = Quaternion3;
-    using Pose3 = Pose3;
-    using Vector33 = Vector33;
-    using Matrix33 = Matrix33;
+    using Vector3 = JA.LinearAlgebra.VectorCalculus.Vector3;
+    using Matrix3 = JA.LinearAlgebra.VectorCalculus.Matrix3;
+    using Quaternion3 = JA.LinearAlgebra.VectorCalculus.Quaternion3;
+    using Pose3 = JA.LinearAlgebra.VectorCalculus.Pose3;
+    using Mesh = JA.LinearAlgebra.Geometry.Mesh;
+
+    using Vector33 = JA.LinearAlgebra.ScrewCalculus.Vector33;
+    using Matrix33 = JA.LinearAlgebra.ScrewCalculus.Matrix33;
 
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public readonly struct MassProperties :
@@ -51,7 +50,7 @@ namespace JA.Dynamics
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => data.mass;
         }
-        public Matrix3 MMoi
+        public Matrix3 Mmoi
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => data.mmoi;
@@ -65,7 +64,7 @@ namespace JA.Dynamics
         public MassProperties At(Pose3 @base)
         {
             var newCg = Pose3.Add(@base, data.cg);
-            return new MassProperties(Units, data.mass, data.mmoi, newCg);
+            return new MassProperties(Units, data.mass, data.mmoi, newCg.Position);
         }
 
         #endregion
@@ -174,7 +173,7 @@ namespace JA.Dynamics
 
         public Vector33 GetWeight(Pose3 pose, Vector3 gravity, out Vector3 cg)
         {
-            cg = Pose3.Add(pose, data.cg);
+            cg = Pose3.Add(pose, data.cg).Position;
             return GetWeight(data.mass, cg, gravity);
         }
         public static Vector33 GetWeight(double mass, Vector3 cg, Vector3 gravity)
@@ -187,7 +186,7 @@ namespace JA.Dynamics
         }
         public Matrix33 Spi(Pose3 pose,out Matrix3 wolrdInertiaAtCg)
         {
-            return Spi(pose.Orientation, Pose3.Add(pose, data.cg), out wolrdInertiaAtCg);
+            return Spi(pose.Orientation, Pose3.Add(pose, data.cg).Position, out wolrdInertiaAtCg);
         }
         public Matrix33 Spi(Quaternion3 orientation, Vector3 cg, out Matrix3 wolrdInertiaAtCg)
         {
@@ -221,7 +220,7 @@ namespace JA.Dynamics
 
         public Matrix33 Spm(Pose3 pose, out Matrix3 wolrdInertiaAtCgInverse)
         {
-            return Spm(pose.Orientation, Pose3.Add(pose, data.cg), out wolrdInertiaAtCgInverse);
+            return Spm(pose.Orientation, Pose3.Add(pose, data.cg).Position, out wolrdInertiaAtCgInverse);
         }
         public Matrix33 Spm(Quaternion3 orientation, Vector3 cg, out Matrix3 wolrdInertiaAtCgInverse)
         {
@@ -259,7 +258,7 @@ namespace JA.Dynamics
         #region Algebra
         public static MassProperties Scale(float factor, MassProperties a)
         {
-            return new MassProperties(a.Units, factor * a.Mass, factor * a.MMoi, a.CG);
+            return new MassProperties(a.Units, factor * a.Mass, factor * a.Mmoi, a.CG);
         }
 
         public static MassProperties Add(MassProperties a, MassProperties b)
@@ -267,7 +266,7 @@ namespace JA.Dynamics
             if (a.Units != b.Units) throw new NotSupportedException();
             float m = a.Mass + b.Mass;
             var cg = (a.CG * a.Mass + b.CG * b.Mass)/m;
-            var mmoi = a.MMoi + a.Mass * a.CG.MomentTensor() + b.MMoi + b.Mass * b.CG.MomentTensor();
+            var mmoi = a.Mmoi + a.Mass * a.CG.MomentTensor() + b.Mmoi + b.Mass * b.CG.MomentTensor();
             return new MassProperties(a.Units, m, mmoi - m * cg.MomentTensor(), cg);
         }
         public static MassProperties Subtract(MassProperties a, MassProperties b)
@@ -275,7 +274,7 @@ namespace JA.Dynamics
             if (a.Units != b.Units) throw new NotSupportedException();
             float m = a.Mass - b.Mass;
             var cg = (a.CG * a.Mass - b.CG * b.Mass) / m;
-            var mmoi = a.MMoi + a.Mass * a.CG.MomentTensor() - b.MMoi - b.Mass * b.CG.MomentTensor();
+            var mmoi = a.Mmoi + a.Mass * a.CG.MomentTensor() - b.Mmoi - b.Mass * b.CG.MomentTensor();
             return new MassProperties(a.Units, m, mmoi - m * cg.MagnitudeSquared, cg);
         }
 
@@ -289,11 +288,11 @@ namespace JA.Dynamics
         #region Formatting
         public override string ToString()
         {
-            if (MMoi.IsDIagonal)
+            if (Mmoi.IsDIagonal)
             {
-                return $"MassProp(Units={Units}, Mass={Mass:g3}, MMOI={MMoi.Diagonals():g3}, CG={CG:g3})";
+                return $"MassProp(Units={Units}, Mass={Mass:g3}, MMOI={Mmoi.Diagonals():g3}, CG={CG:g3})";
             }
-            return $"MassProp(Units={Units}, Mass={Mass:g3}, MMOI={MMoi:g3}, CG={CG:g3})";
+            return $"MassProp(Units={Units}, Mass={Mass:g3}, MMOI={Mmoi:g3}, CG={CG:g3})";
         }
 
         #endregion

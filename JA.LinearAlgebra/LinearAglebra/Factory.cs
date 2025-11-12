@@ -635,7 +635,9 @@ namespace JA.LinearAlgebra
             return sb.ToString();
         }
         public static string Show(this Matrix values, string title = "", string format = "g4")
-            => Show(values.ToJaggedArray(), title, format); 
+            => Show(values.ToJaggedArray(), title, format);
+        public static string Show(this double[,] values, string title = "", string format = "g4")
+            => Show(values.ToJaggedArray(), title, format);
         public static string Show(this double[][] values, string title = "", string format = "g4")
         {
             int n = values.Length;

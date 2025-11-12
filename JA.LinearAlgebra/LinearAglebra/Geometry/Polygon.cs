@@ -39,6 +39,25 @@ namespace JA.LinearAlgebra.Geometry
 
         public Triangle[] GetTriangles()
         {
+            if (Nodes.Length<2)
+            {
+                return Array.Empty<Triangle>();
+            }
+            if (Nodes.Length==2)
+            {
+                return new Triangle[] { new Triangle( Nodes[0], Nodes[1], Nodes[1]) };
+            }
+            if (Nodes.Length==3)
+            {
+                return new Triangle[] { new Triangle( Nodes[0], Nodes[1], Nodes[2]) };
+            }
+            if (Nodes.Length==4)
+            {
+                return new Triangle[] { 
+                    new Triangle( Nodes[0], Nodes[1], Nodes[2]),
+                    new Triangle( Nodes[2], Nodes[3], Nodes[0]),
+                    };
+            }
             var list = new List<Triangle>();
             if (IsConvex)
             {

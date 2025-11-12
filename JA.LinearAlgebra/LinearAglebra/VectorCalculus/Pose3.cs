@@ -20,8 +20,8 @@ namespace JA.LinearAlgebra.VectorCalculus
         }
         public static implicit operator Pose3(Vector3 position) => At(position);
         public static implicit operator Pose3(Quaternion3 orientation) => About(orientation);
-        public static implicit operator Vector3(Pose3 pose) => pose.position;
-        public static implicit operator Quaternion3(Pose3 pose) => pose.orientation;
+        public static explicit operator Vector3(Pose3 pose) => pose.position;
+        public static explicit operator Quaternion3(Pose3 pose) => pose.orientation;
         public static Pose3 Origin { get; } = new Pose3(UnitSystem.MKS, Vector3.Zero, Quaternion3.Identity);
         public static Pose3 About(Quaternion3 orientation) => new Pose3(UnitSystem.MKS, Vector3.Zero, orientation);
         public static Pose3 At(Vector3 position) => At(UnitSystem.MKS, position);

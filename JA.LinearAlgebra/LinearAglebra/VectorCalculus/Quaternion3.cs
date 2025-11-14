@@ -40,6 +40,8 @@ namespace JA.LinearAlgebra.VectorCalculus
         public Vector3 VectorPart { get => new Vector3(x, y, z); }
         public double MagnitudeSquared => w * w + x * x + y * y + z * z;
         public double Magnitude => Math.Sqrt(MagnitudeSquared);
+        public bool IsNormalized => MagnitudeSquared==1;
+        public bool IsIdentity => w==1 && x==0 && y==0 && z==0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion3 Conjugate() => new Quaternion3(w, -x, -y, -z);
@@ -154,8 +156,13 @@ namespace JA.LinearAlgebra.VectorCalculus
             return true;
         }
 
-        public bool Equals(Quaternion3 other) =>
-            w == other.w && x == other.x && y == other.y && z == other.z;
+        public bool Equals(Quaternion3 other)
+        {
+            return w == other.w
+                && x == other.x
+                && y == other.y
+                && z == other.z;
+        }
 
         public static bool operator ==(Quaternion3 left, Quaternion3 right) => left.Equals(right);
         public static bool operator !=(Quaternion3 left, Quaternion3 right) => !left.Equals(right); 
@@ -174,7 +181,12 @@ namespace JA.LinearAlgebra.VectorCalculus
                 return hc;
             }
         }
-        public Matrix3 ToRotation() => Matrix3.FromQuaternion(this);
+        public Matrix3 ToRotation()
+        {
+            if (IsIdentity) return Matrix3.Identity;
+            return Matrix3.FromQuaternion(this);
+        }
+
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
         public Quaternion3 Differentiate(Vector3 angularVelocity)
         {

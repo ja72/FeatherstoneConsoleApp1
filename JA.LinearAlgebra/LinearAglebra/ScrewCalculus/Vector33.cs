@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -8,18 +9,24 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.LinearAlgebra.VectorCalculus;
-
+using static System.Math;
 
 namespace JA.LinearAlgebra.ScrewCalculus
 {
-    
+    //using JA.LinearAlgebra.VectorCalculus;
+
     using Vector3 = VectorCalculus.Vector3;
 
-    public enum ScrewCoordinates
+    public enum ScrewLayout
     {
+        /// <summary>
+        /// Represents a 6DOF screw vector, with layout of moment vector first and a direction vector second.
+        /// </summary>
         [Description("screw=(moment vector, direction vector)")]
         Axis,   
+        /// <summary>
+        /// Represents a 6DOF screw vector, with layout of direction vector first and a moment vector second.
+        /// </summary>        
         [Description("screw=(direction vector, moment vector)")]
         Ray,    
     }
@@ -31,6 +38,7 @@ namespace JA.LinearAlgebra.ScrewCalculus
 
     public readonly struct Vector33 : IEquatable<Vector33>
     {
+        public const double ZERO_TOL = 1e-12;
         internal const int Size = 6;
         internal const int ByteSize = Size * sizeof(double);
 
@@ -44,156 +52,16 @@ namespace JA.LinearAlgebra.ScrewCalculus
         }
 
         public static Vector33 Zero { get; } = new Vector33(Vector3.Zero, Vector3.Zero);
-
-        public static Vector33 Twist(Vector3 value, Vector3 position, double pitch = 0)
-            => new Vector33(
-                value*pitch+Vector3.Cross(position, value),
-                value
-            );
-        public static Vector33 Twist(Vector3 value)
-            => new Vector33(
-                value,
-                Vector3.Zero
-                );
-        public static Vector33 Wrench(Vector3 value, Vector3 position, double pitch = 0)
-            => new Vector33(
-                value,
-                value*pitch+Vector3.Cross(position, value)
-            );
-        public static Vector33 Wrench(Vector3 value)
-            => new Vector33(
-                Vector3.Zero,
-                value
-            );
-
         #endregion
-
-        #region Twists
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Matrix33 CrossTwistOp()
-        {
-            var wx = angular.CrossOp();
-            var vx = linear.CrossOp();
-            return new Matrix33(wx, vx, Matrix3.Zero, wx);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector33 CrossTwist(Vector33 @this, Vector33 twist)
-        {
-            //tex: Twist Differential Operator
-            //$$\begin{bmatrix}v\\ \omega
-            //\end{bmatrix}\times=\begin{bmatrix}\omega\times & v\times\\
-            // 0 & \omega\times \end{bmatrix}$$
-            return new Vector33(
-                Vector3.Cross(@this.angular, twist.linear)+Vector3.Cross(@this.linear, twist.angular),
-                Vector3.Cross(@this.angular, twist.angular)
-            );
-        }
-        /// <summary>
-        /// By convention the angular vector is the line vector for twists.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 TwistLineVector()
-            => angular;
-        /// <summary>
-        /// By convention the linear vector is the moment vector for twists.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 TwistMomentVector()
-            => linear;
-        /// <summary>
-        /// The magnitude of a twist.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double TwistMagnitude()
-            => angular.Magnitude;
-        /// <summary>
-        /// The direction of a twist line.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 TwistDirection()
-            => angular.Normalize();
-        /// <summary>
-        /// The pitch of a twist.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double TwistPitch()
-            //tex: $$h = \frac{ \omega \cdot v}{\|\omega\|^2}$$
-            => Vector3.Dot(angular, linear)/angular.MagnitudeSquared;
-        /// <summary>
-        /// The point of a twist line closest to the origin.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 TwistPosition()
-            //tex: $$r = \frac{ \omega \times v}{\|\omega\|^2}$$
-            => Vector3.Cross(angular, linear)/angular.MagnitudeSquared;
-        #endregion
-
-        #region Wrenches
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Matrix33 CrossWrenchOp()
-        {
-            var wx = angular.CrossOp();
-            var vx = linear.CrossOp();
-            return new Matrix33(wx, Matrix3.Zero, vx, wx);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector33 CrossWrench(Vector33 @this, Vector33 wrench)
-        {
-            //tex: Wrench Differential Operator $$\begin{bmatrix}v\\
-            //\omega
-            //\end{bmatrix}\times=\begin{bmatrix}\omega\times & 0\\
-            //v\times & \omega\times
-            //\end{bmatrix}$$
-            return new Vector33(
-                Vector3.Cross(@this.angular, wrench.linear),
-                Vector3.Cross(@this.linear, wrench.linear)+Vector3.Cross(@this.angular, wrench.angular)
-            );
-        }
-        /// <summary>
-        /// By convention the angular vector is the line vector for wrenches.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 WrenchLineVector()
-            => linear;
-        /// <summary>
-        /// By convention the linear vector is the moment vector for wrenches.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 WrenchMomentVector()
-            => angular;
-        /// <summary>
-        /// The magnitude of a wrench.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double WrenchMagnitude()
-            => linear.Magnitude;
-        /// <summary>
-        /// The direction of a wrench line.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 WrenchDirection()
-            => linear.Normalize();
-        /// <summary>
-        /// The pitch of a wrench.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double WrenchPitch()
-            //tex: $$h = \frac{ F \cdot \tau}{\|F\|^2}$$
-            => Vector3.Dot(linear, angular)/linear.MagnitudeSquared;
-        /// <summary>
-        /// The point of a wrench line closest to the origin.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 WrenchPosition()
-            //tex: $$r = \frac{ F \times \tau}{\|F\|^2}$$
-            => Vector3.Cross(linear, angular)/linear.MagnitudeSquared;
-        #endregion
-
 
         #region Properties
         public Vector3 Linear => this.linear;
         public Vector3 Angular => this.angular;
+
+        public bool IsZero(double tolerance = ZERO_TOL)
+            => linear.IsZero(tolerance)
+            && angular.IsZero(tolerance);
+
         #endregion
 
         #region Algebra
@@ -260,7 +128,6 @@ namespace JA.LinearAlgebra.ScrewCalculus
         public static bool operator ==(Vector33 target, Vector33 other) { return target.Equals(other); }
         public static bool operator !=(Vector33 target, Vector33 other) { return !target.Equals(other); }
 
-
         /// <summary>
         /// Checks for equality among <see cref="Vector33"/> classes
         /// </summary>
@@ -294,6 +161,4 @@ namespace JA.LinearAlgebra.ScrewCalculus
         public double[] ToArray() => new double[] { linear.x, linear.y, linear.z, angular.x, angular.y, angular.z };
         #endregion
     }
-
-
 }

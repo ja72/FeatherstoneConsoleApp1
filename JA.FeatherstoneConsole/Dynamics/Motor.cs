@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Security.Cryptography;
 
 namespace JA.Dynamics
@@ -66,9 +67,9 @@ namespace JA.Dynamics
 
         public MotorDefined Defined { get; }
         public Expr Drive { get; }
-        public double Value(double t, double q, double qp)
+        public Func<double, double, double, double> Compile()
         {
-            return Drive[t, q, qp];
+            return (t,q,qp) => Drive[t,q,q];
         }
         public override string ToString()
         {

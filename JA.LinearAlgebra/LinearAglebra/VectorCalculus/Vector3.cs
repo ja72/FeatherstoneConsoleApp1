@@ -107,14 +107,29 @@ namespace JA.LinearAlgebra.VectorCalculus
         public double Y => this.y;
 
         public double Z => this.z;
-
-        public bool IsZero => x==0.0&&y==0.0&&z==0.0;
-        public bool IsUnitX => x==1.0&&y==0.0&&z==0.0;
-        public bool IsUnitY => x==0.0&&y==1.0&&z==0.0;
-        public bool IsUnitZ => x==0.0&&y==0.0&&z==1.0;
+        public const double ZERO_TOL = 1e-12;
+        public bool IsZero(double tolerance = ZERO_TOL)
+            => Abs(x)<=tolerance
+            && Abs(y)<=tolerance
+            && Abs(z)<=tolerance;
+        public bool IsUnitX(double tolerance = ZERO_TOL) 
+            => Abs(x-1)<=tolerance
+            && Abs(y)<=tolerance
+            && Abs(z)<=tolerance;
+        public bool IsUnitY(double tolerance = ZERO_TOL) 
+            => Abs(x)<=tolerance
+            && Abs(y-1)<=tolerance
+            && Abs(z)<=tolerance;
+        public bool IsUnitZ(double tolerance = ZERO_TOL) 
+            => Abs(x)<=tolerance
+            && Abs(y)<=tolerance
+            && Abs(z-1)<=tolerance;
         #endregion
 
         #region Algebra
+
+        public static double MaxAbs(Vector3 a) 
+            => Max(Abs(a.x), Max(Abs(a.y), Abs(a.z)));
         public Vector3 Normalize() => Normalized(this);
 
         public bool TryNormalize(out Vector3 result)

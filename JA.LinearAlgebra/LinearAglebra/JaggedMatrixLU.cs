@@ -16,6 +16,8 @@ namespace JA.LinearAlgebra
     /// </summary>
     public static class JaggedMatrixLU
     {
+        public const double ZERO_TOL = 1e-12;
+
         public static double[][] CopyMatrix(this double[][] matrix)
         {
             int rows = matrix.Length;
@@ -31,11 +33,11 @@ namespace JA.LinearAlgebra
 
         public static bool MatrixDecompose(this double[][] matrix, out double[][] lu, out int[] perm, out int toggle)
         {
-            double tol = 1e-12;
+            double tol = ZERO_TOL;
             // Doolittle LUP decomposition.
             // assumes matrix is square.
             int n = matrix.Length; // convenience
-            lu=CopyMatrix(matrix);
+            lu = Factory.CopyJaggedMatrix(matrix);
             perm=Enumerable.Range(0, n).ToArray();
             toggle=1;
             for (int j = 0; j<n-1; ++j) // each column
@@ -182,7 +184,7 @@ namespace JA.LinearAlgebra
         {
             if (!MatrixDecompose(matrix, out double[][] lu, out int[] perm, out _))
             {
-                inverse=CopyMatrix(matrix);
+                inverse=Factory.CopyJaggedMatrix(matrix);
                 return false;
             }
             return LuInverse(lu, perm, out inverse);
@@ -402,7 +404,7 @@ namespace JA.LinearAlgebra
         }
         public static double[][] UnPermute(double[][] luProduct, int[] perm)
         {
-            double[][] result = CopyMatrix(luProduct);
+            double[][] result = Factory.CopyJaggedMatrix(luProduct);
             int[] unperm = new int[perm.Length];
             for (int i = 0; i<perm.Length; ++i)
             {

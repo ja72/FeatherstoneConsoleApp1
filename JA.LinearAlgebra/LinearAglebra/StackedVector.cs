@@ -8,7 +8,6 @@ namespace JA.LinearAlgebra
     {
         readonly double[] elements;
         readonly IReadOnlyList<int> partitions;
-        readonly int size;
 
         #region Factory
         public StackedVector(params int[] partition_sizes)
@@ -16,13 +15,13 @@ namespace JA.LinearAlgebra
         public StackedVector(IReadOnlyList<int> partition_sizes)
         {
             this.partitions=partition_sizes;
-            this.size=partition_sizes.Sum();
+            var size=partition_sizes.Sum();
             this.elements=new double[size];
         }
         public StackedVector(IReadOnlyList<int> partition_sizes, double[] values)
         {
             this.partitions=partition_sizes;
-            this.size=partition_sizes.Sum();
+            var size=partition_sizes.Sum();
             if (size==values.Length)
             {
                 this.elements=values;
@@ -45,7 +44,6 @@ namespace JA.LinearAlgebra
                 values[i]=partitions[i];
                 part[i]=values[i].Length;
             }
-            this.size=n;
             this.partitions=part;
             this.elements=Factory.ToArray(values);
         }
@@ -62,7 +60,7 @@ namespace JA.LinearAlgebra
         #region Properties
         public IReadOnlyList<int> Partitions => partitions;
         public double[] Elements => elements;
-        public int Size { get => size; }
+        public int Size { get => elements.Length; }
         public Vector ToVector() => new Vector(elements);
         public int GetOffset(int partitionIndex)
         {

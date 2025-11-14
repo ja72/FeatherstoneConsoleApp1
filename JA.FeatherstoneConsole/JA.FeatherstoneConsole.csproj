@@ -111,11 +111,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dynamics\Articulated.cs" />
     <Compile Include="Dynamics\Element.cs" />
+    <Compile Include="Dynamics\JointBodyInfo.cs" />
+    <Compile Include="Dynamics\Kinematics.cs" />
     <Compile Include="Dynamics\Motor.cs" />
     <Compile Include="Dynamics\Simulation.cs" />
     <Compile Include="Dynamics\JointBody.cs" />
     <Compile Include="Dynamics\MassProperties.cs" />
+    <Compile Include="Dynamics\Dynamics.cs" />
+    <Compile Include="Dynamics\State.cs" />
     <Compile Include="Dynamics\World.cs" />
     <Compile Include="ITree.cs" />
     <Compile Include="Program.cs" />
@@ -123,6 +128,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="Models\LINK.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\LINK.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Models\LINK.stl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

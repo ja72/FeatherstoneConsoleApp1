@@ -215,4 +215,5 @@ namespace JA.LinearAlgebra.ScrewCalculus
         #endregion
 
     }
+
 }

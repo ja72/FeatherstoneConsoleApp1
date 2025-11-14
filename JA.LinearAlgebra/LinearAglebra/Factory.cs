@@ -256,6 +256,19 @@ namespace JA.LinearAlgebra
         #endregion
 
         #region Jagged Double Matrix
+        public static double[][] CopyJaggedMatrix(this double[][] matrix)
+        {
+            int rows = matrix.Length;
+            int cols = rows > 0 ?  matrix[0].Length : 0;
+            double[][] result = new double[rows][];
+            for (int i = 0; i<rows; i++)
+            {
+                result[i]=new double[cols];
+                Array.Copy(matrix[i], result[i], cols);
+            }
+            return result;
+        }
+
         public static double[][] CreateJaggedArray(int rows, int cols)
         {
             var matrix=new double[rows][];
@@ -331,7 +344,16 @@ namespace JA.LinearAlgebra
         }
         #endregion
 
-        #region Array Matrix
+        #region Array2 Matrix
+        public static double[,] CopyArray2(this double[,] matrix)
+        {
+            int rows = matrix.GetLength(0);
+            int cols = matrix.GetLength(1);
+            double[,] result = new double[rows, cols];
+            Array.Copy(matrix, result, matrix.Length);
+            return result;
+        }
+
         public static double[,] CreateArray2(int rows, int cols)
         {
             var matrix=new double[rows, cols];
@@ -635,7 +657,9 @@ namespace JA.LinearAlgebra
             return sb.ToString();
         }
         public static string Show(this Matrix values, string title = "", string format = "g4")
-            => Show(values.ToJaggedArray(), title, format); 
+            => Show(values.ToJaggedArray(), title, format);
+        public static string Show(this double[,] values, string title = "", string format = "g4")
+            => Show(values.ToJaggedArray(), title, format);
         public static string Show(this double[][] values, string title = "", string format = "g4")
         {
             int n = values.Length;

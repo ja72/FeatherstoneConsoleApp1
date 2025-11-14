@@ -2,8 +2,11 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using static System.Math;
+
 namespace JA.LinearAlgebra.VectorCalculus
 {
+
     /// <summary>
     /// Immutable 3x3 matrix using double precision.
     /// Row-major storage:
@@ -14,6 +17,7 @@ namespace JA.LinearAlgebra.VectorCalculus
     [StructLayout(LayoutKind.Sequential, Size = ByteSize)]
     public readonly struct Matrix3 : IEquatable<Matrix3>
     {
+        public const double ZERO_TOL = 1e-12;
         internal const int Size = 9;
         internal const int ByteSize = Size * sizeof(double);
 
@@ -97,7 +101,37 @@ namespace JA.LinearAlgebra.VectorCalculus
                 v.z, 0.0, -v.x,
                 -v.y, v.x, 0.0);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 InverseCrossOp(Matrix3 A)
+        {
+            double x = (A.m32 - A.m23)/2;
+            double y = (A.m13 - A.m31)/2;
+            double z = (A.m21 - A.m12)/2;
 
+            return new Vector3(x, y, z);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 SymmOp(Vector3 v, double scale = 1)
+        {
+            if (scale==0) return Zero;
+            if (scale!=1)
+            {
+                v*=scale;
+            }
+            return new Matrix3(
+                0.0, v.z, v.y,
+                v.z, 0.0, v.x,
+                v.y, v.x, 0.0);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 InverseSymmOp(Matrix3 A)
+        {
+            double x = (A.m32 + A.m23)/2;
+            double y = (A.m13 + A.m31)/2;
+            double z = (A.m21 + A.m12)/2;
+
+            return new Vector3(x, y, z);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 MomentTensor(Vector3 v, double scale = 1)
         {
@@ -194,22 +228,6 @@ namespace JA.LinearAlgebra.VectorCalculus
         public double M32 => m32;
         public double M33 => m33;
 
-        public bool IsDIagonal =>
-            m12==0.0&&m13==0.0&&
-            m21==0.0&&m23==0.0&&
-            m31==0.0&&m32==0.0;
-        public bool IsSymmetric =>
-            m12==m21&&
-            m13==m31&&
-            m23==m32;
-        public bool IsSkewSymmetric =>
-            m12==-m21&&
-            m13==-m31&&
-            m23==-m32;
-        public bool IsZero =>
-            m11==0.0&&m12==0.0&&m13==0.0&&
-            m21==0.0&&m22==0.0&&m23==0.0&&
-            m31==0.0&&m32==0.0&&m33==0.0;
         public double this[int row, int column]
         {
             get
@@ -232,13 +250,32 @@ namespace JA.LinearAlgebra.VectorCalculus
                 }
             }
         }
-        public double Trace() => Trace(this);
-        public double Determinant() => Determinant(this);
-        public Vector3 Diagonals() => new Vector3(m11, m22, m33);
-        public Matrix3 Transpose() => Transpose(this);
+        public Vector3 Row1 { get => new Vector3(m11, m12, m13); }
+        public Vector3 Row2 { get => new Vector3(m21, m22, m23); }
+        public Vector3 Row3 { get => new Vector3(m31, m32, m33); }
+        public Vector3 Column1 { get => new Vector3(m11, m21, m31); }
+        public Vector3 Column2 { get => new Vector3(m12, m22, m32); }
+        public Vector3 Column3 { get => new Vector3(m13, m23, m33); }
+        public bool IsDIagonal(double tolerance = ZERO_TOL)
+            => Abs(m12)<=tolerance&&Abs(m13)<=tolerance
+            && Abs(m21)<=tolerance&&Abs(m23)<=tolerance
+            && Abs(m31)<=tolerance&&Abs(m32)<=tolerance;
+        public bool IsSymmetric(double tolerance = ZERO_TOL)
+            => Abs(m12-m21)<=tolerance
+            && Abs(m31-m13)<=tolerance
+            && Abs(m32-m23)<=tolerance;
+        public bool IsSkewSymmetric(double tolerance = ZERO_TOL) 
+            => Abs(m12+m21)<=tolerance&& Abs(m11)<=tolerance
+            && Abs(m31+m13)<=tolerance&& Abs(m22)<=tolerance
+            && Abs(m32+m23)<=tolerance&& Abs(m33)<=tolerance;
+        public bool IsZero(double tolerance = ZERO_TOL)
+            => Abs(m11)<=tolerance&&Abs(m12)<=tolerance&&Abs(m13)<=tolerance
+            && Abs(m21)<=tolerance&&Abs(m22)<=tolerance&&Abs(m23)<=tolerance
+            && Abs(m31)<=tolerance&&Abs(m32)<=tolerance&&Abs(m33)<=tolerance;
         public Matrix3 ToDiagonal() => Diagonal(m11, m22, m33);
         public Matrix3 ToSymmetric() => ( this+Transpose(this) )/2.0;
         public Matrix3 ToSkewSymmetric() => ( this-Transpose(this) )/2.0;
+
         public Matrix3 ToUpperTriangular(bool includeDiagonal = true) =>
             includeDiagonal ?
             new Matrix3(
@@ -259,7 +296,63 @@ namespace JA.LinearAlgebra.VectorCalculus
                 0.0, 0.0, 0.0,
                 m21, 0.0, 0.0,
                 m31, m32, 0.0);
+        public Vector3 ToDiagonalVector() => new Vector3(m11, m22, m33);
 
+        public static double MaxAbs(Matrix3 M) => 
+                Max(Max(Max(Max(Max(Max(Max(Max(
+                Abs(M.m11), Abs(M.m12)), Abs(M.m12)),
+                Abs(M.m21)), Abs(M.m22)), Abs(M.m23)),
+                Abs(M.m31)), Abs(M.m32)), Abs(M.m33));
+
+        /// <summary>
+        /// The squared Frobenius Norm of a Matrix.
+        /// </summary>
+        /// <param name="M">The Matrix.</param>
+        /// <returns><code>|| M ||^2</code></returns>
+        public static double NormSquared(Matrix3 M)
+            //tex: $ \| M \|^2 $
+            => M.m11*M.m11+M.m12*M.m12+M.m13*M.m13+
+               M.m21*M.m21+M.m22*M.m22+M.m23*M.m23+
+               M.m31*M.m31+M.m32*M.m32+M.m33*M.m33;
+        /// <summary>
+        /// The Frobenius Norm of a Matrix.
+        /// </summary>
+        /// <param name="M">The Matrix.</param>
+        /// <returns><code>|| M ||</code></returns>
+        public static double Norm(Matrix3 M) 
+            //tex: $ \sqrt{\left( \| M \|^2 \right)} $
+            => Sqrt(NormSquared(M));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Determinant(Matrix3 n)
+        {
+            // Rule of Sarrus / cofactor expansion
+            return
+                n.m11*( n.m22*n.m33-n.m23*n.m32 )-
+                n.m12*( n.m21*n.m33-n.m23*n.m31 )+
+                n.m13*( n.m21*n.m32-n.m22*n.m31 );
+        }
+        /// <summary>
+        /// Matrix Adjugate created from cofactors
+        /// </summary>
+        /// <param name="n">The matrix</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 Adjugate(Matrix3 n)
+            //tex: ${\rm Adj}(A)$
+        {
+            double n00 = n.m11, n01 = n.m12, n02 = n.m13;
+            double n10 = n.m21, n11 = n.m22, n12 = n.m23;
+            double n20 = n.m31, n21 = n.m32, n22 = n.m33;
+
+            return new Matrix3(
+                n11*n22-n12*n21, n02*n21-n01*n22, n01*n12-n02*n11,
+                n12*n20-n10*n22, n00*n22-n02*n20, n02*n10-n00*n12,
+                n10*n21-n11*n20, n01*n20-n00*n21, n00*n11-n01*n10);
+        }
+
+        public double Trace() => Trace(this);
+        public double Determinant() => Determinant(this);
+        public Matrix3 Transpose() => Transpose(this);
         #endregion
 
         #region Algebra
@@ -281,8 +374,8 @@ namespace JA.LinearAlgebra.VectorCalculus
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 Product(Matrix3 a, Matrix3 b)
-        {
-            return new Matrix3(
+            //tex: $A \,B$
+            => new Matrix3(
                 a.m11*b.m11+a.m12*b.m21+a.m13*b.m31,
                 a.m11*b.m12+a.m12*b.m22+a.m13*b.m32,
                 a.m11*b.m13+a.m12*b.m23+a.m13*b.m33,
@@ -294,7 +387,28 @@ namespace JA.LinearAlgebra.VectorCalculus
                 a.m31*b.m11+a.m32*b.m21+a.m33*b.m31,
                 a.m31*b.m12+a.m32*b.m22+a.m33*b.m32,
                 a.m31*b.m13+a.m32*b.m23+a.m33*b.m33);
-        }
+        
+        /// <summary>
+        /// Transpose product of two matrices
+        /// </summary>
+        /// <param name="a">The fist matrix (whos transpose is going to be used).</param>
+        /// <param name="b">The second matrix.</param>
+        /// <returns>transpose(A)*B</returns>
+        public static Matrix3 TransposeProduct(Matrix3 a, Matrix3 b)
+            //tex: $A^\top B$
+            => new Matrix3(
+                a.m11*b.m11+a.m21*b.m21+a.m31*b.m31,
+                a.m11*b.m12+a.m21*b.m22+a.m31*b.m32,
+                a.m11*b.m13+a.m21*b.m23+a.m31*b.m33,
+
+                a.m12*b.m11+a.m22*b.m21+a.m32*b.m31,
+                a.m12*b.m12+a.m22*b.m22+a.m32*b.m32,
+                a.m12*b.m13+a.m22*b.m23+a.m32*b.m33,
+
+                a.m13*b.m11+a.m23*b.m21+a.m33*b.m31,
+                a.m13*b.m12+a.m23*b.m22+a.m33*b.m32,
+                a.m13*b.m13+a.m23*b.m23+a.m33*b.m33);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Trace(Matrix3 m) => m.m11+m.m22+m.m33;
 
@@ -339,16 +453,6 @@ namespace JA.LinearAlgebra.VectorCalculus
                 a.m31-b.m31, a.m32-b.m32, a.m33-b.m33);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Determinant(Matrix3 m)
-        {
-            // Rule of Sarrus / cofactor expansion
-            return
-                m.m11*( m.m22*m.m33-m.m23*m.m32 )-
-                m.m12*( m.m21*m.m33-m.m23*m.m31 )+
-                m.m13*( m.m21*m.m32-m.m22*m.m31 );
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryInvert(out Matrix3 result)
         {
             var det = Determinant(this);
@@ -386,7 +490,9 @@ namespace JA.LinearAlgebra.VectorCalculus
             result=inv.Product(b);
             return true;
         }
+
         #endregion
+
         #region Equality
         public bool Equals(Matrix3 other) =>
             m11==other.m11&&m12==other.m12&&m13==other.m13&&

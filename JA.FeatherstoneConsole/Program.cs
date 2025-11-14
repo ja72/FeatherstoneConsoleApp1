@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace JA
 {
@@ -11,16 +12,18 @@ namespace JA
     using JA.LinearAlgebra.ScrewCalculus;
 
     using JA.Dynamics;
-    using System.Diagnostics;
+    using JA.LinearAlgebra.Geometry;
+    using System.Drawing;
 
     internal class Program
     {
         static readonly Random rng = new Random();
         static void Main(string[] args)
         {
-            TestStackedVector();
-            TestMotorDrive();
-            //TestSimulationTwo();
+            //TestStackedVector();
+            //TestMotorDrive();
+            TestMeshObject();
+            TestSimulationTwo();
         }
 
         static void TestSimulationOne()
@@ -70,12 +73,12 @@ namespace JA
             //Console.WriteLine(linkage);
             var j1 = sys.NewPrismatic(Vector3.Zero, Vector3.UnitX);
             j1.InitialConditions=(0, 1);
-            j1.Motor=JointBody.ConstantValue(5);
-            var joint =  j1.AddRevolute(Vector3.Zero, Vector3.UnitZ);
-            joint.InitialConditions=(Math.PI/6, 0);
-            joint.AddMassProperties(linkage);
+            j1.Motor=Motor.ConstForcing(5);
+            var j2 =  j1.AddRevolute(Vector3.Zero, Vector3.UnitZ);
+            j2.InitialConditions=(Math.PI/6, 0);
+            j2.AddMassProperties(linkage);
             Console.WriteLine(j1);
-            Console.WriteLine(joint);
+            Console.WriteLine(j2);
 
             var sim = sys.ToSimulation();
             Console.WriteLine(sim);
@@ -93,11 +96,14 @@ namespace JA
 
         static void TestStackedVector()
         {
+            // parts=(3,2) => s={ a, b, c | d, e }
+            // s[0] = {a,b,c}   - offset=0, count=3
+            // s[1] = {d,e]     - offset=3, count=2
             int  n = 2;
             StackedVector x = StackedVector.FromSizeAndCount(3, n);
             for (int i = 0; i<n; i++)
-            {
-                x[i]= Vector3.RandomVector(5);
+            {                
+                x[i] =  Vector3.RandomVector(5);
             }
             Console.WriteLine(x.Show("vector, x="));
 
@@ -166,6 +172,46 @@ namespace JA
                 double qpp = motor.Drive[t,0,0];
                 double qpp_actual = -A*ω*ω*Math.Sin(ω*t);
                 Console.WriteLine($"{t,12:F4} {qpp,16:f6} {qpp_actual,16:f6} {qpp-qpp_actual,16:g6}");
+            }
+        }
+
+        static void TestMeshObject()
+        {
+            const string filePath = @"Models\LINK.STL";
+
+            var origin = new System.Numerics.Vector3(0,0,10.5567f);
+            if (Mesh.ImportSTL(UnitSystem.MMGS, filePath, Color.AliceBlue, out var link, origin))
+            {
+                Console.WriteLine(link);
+
+                var M = MassProperties.FromMeshAndMass(link, 1.0f);
+
+                Console.WriteLine(M);
+
+                double mass_expect = 1.0;
+                Vector3 cg_expect = new Vector3( 149.0463, 0, 0);
+                Matrix3 mmoi_expect = Matrix3.Diagonal( 70.2181, 7631.8567, 7631.7081 );
+
+                double mass_actual = M.Mass;
+                Vector3 cg_actual = M.CG;
+                Matrix3 mmoi_actual = M.Mmoi;
+
+                Console.WriteLine($"Mass: expect={mass_expect:f4}, actual={mass_actual:f4}, diff={(mass_actual-mass_expect):f4}");
+                Console.WriteLine($"max delta = { (Math.Abs(mass_actual-mass_expect) / Math.Abs(mass_expect)):p2}");
+                Console.WriteLine($"CG:");
+                Console.WriteLine(cg_expect.ToArray().Show("expect=","f4"));
+                Console.WriteLine(cg_actual.ToArray().Show("actual=","f4"));
+                Console.WriteLine((cg_actual-cg_expect).ToArray().Show("diff=","f4"));
+                Console.WriteLine($"max delta = { ((cg_actual-cg_expect).ToArray().MaxAbsElement(out _) / cg_expect.ToArray().MaxAbsElement(out _)):p2}");
+                Console.WriteLine($"MMOI:");
+                Console.WriteLine(mmoi_expect.ToArray2().Show("expect=","f4"));
+                Console.WriteLine(mmoi_actual.ToArray2().Show("actual=","f4"));
+                Console.WriteLine((mmoi_actual-mmoi_expect).ToArray2().Show("diff=","f4"));
+                Console.WriteLine($"max delta = { ((mmoi_actual-mmoi_expect).ToArray().MaxAbsElement(out _) / mmoi_expect.ToArray().MaxAbsElement(out _)):p2}");
+            }
+            else
+            {
+                Console.WriteLine($"Error in the import of STL file {filePath}.");
             }
         }
     }

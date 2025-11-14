@@ -1,0 +1,167 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
+
+using JA.LinearAlgebra;
+using JA.LinearAlgebra.ScrewCalculus;
+using JA.LinearAlgebra.VectorCalculus;
+
+namespace JA.Dynamics
+{
+    public class Simulation
+    {
+        readonly Vector3 gravity;
+        readonly JointBodyInfo[] joints;
+        readonly int[] parents;
+        readonly int[][] children;
+        readonly List<(double t, StackedVector Y)> history;
+        readonly double[] initialPos, initialVel;
+        internal readonly Kinematics kinematics;
+        internal readonly Articulated articulated;
+        internal readonly Dynamics dynamics;
+
+        #region Factory
+        public Simulation(World world)
+        {
+            // Set everything to MKS for simulation
+            this.Units=UnitSystem.MKS;
+            float f_acc = Unit.Acceleration.Convert(world.units, Units);
+            gravity=f_acc*world.gravity;
+            var allJoints = world.GetAllJoints(Units);
+            int n = allJoints.Length;
+            this.joints   = allJoints;
+            this.parents  = new int[n];
+            this.children=new int[n][];
+            for (int i_joint = 0; i_joint<n; i_joint++)
+            {
+                var joint = allJoints[i_joint];
+                if (joint.Parent==null)
+                {
+                    parents[i_joint]=-1;
+                }
+                else
+                {
+                    parents[i_joint]=Array.IndexOf(allJoints, joint.Parent);
+                }
+                children[i_joint]=new int[joint.Children.Count];
+                for (int i_child = 0; i_child<joint.Children.Count; i_child++)
+                {
+                    children[i_joint][i_child]=Array.IndexOf(allJoints, joint.Children[i_child]);
+                }
+            }
+
+            initialPos=new double[n];
+            initialVel=new double[n];
+            for (int i = 0; i<n; i++)
+            {
+                joints[i].DoConvert(Units);
+                var (q, qp)=joints[i].InitialConditions;
+                initialPos[i]=q;
+                initialVel[i]=qp;
+            }
+            this.kinematics=new Kinematics(n);
+            this.articulated=new Articulated(n);
+            this.dynamics = new Dynamics(n);
+            this.history=new List<(double t, StackedVector Y)>();
+            history.Add((0, new StackedVector(initialPos, initialVel)));
+        }
+
+
+        #endregion
+
+        #region Properties
+        public int Dof => joints.Length;
+        public Vector3 Gravity => gravity;
+        public JointBodyInfo[] Joints => joints;
+        public int[] Parents => parents;
+        public int[][] Children => children;
+        public UnitSystem Units { get; }
+        public IReadOnlyList<(double t, StackedVector Y)> History => history;
+        public double Time { get => history[history.Count-1].t; }
+        public StackedVector Current { get => history[history.Count-1].Y; }
+        #endregion
+
+        #region Simulation
+        public void Reset()
+        {
+            this.history.Clear();
+            int n = joints.Length;
+            history.Add((0, new StackedVector(initialPos, initialVel)));
+        }
+        public void AddSolution(double t, StackedVector Y)
+        {
+            history.Add((t, Y));
+        }
+        public void AddSolution((double t, StackedVector Y) solution)
+        {
+            history.Add(solution);
+        }
+
+        public void Integrate(double step)
+        {
+            var sol = RungeKutta(Time, Current, step);
+            AddSolution(sol);
+        }
+        public void RunTo(double endTime, int steps)
+            => RunTo(endTime, ( endTime-Time )/steps);
+        public void RunTo(double endTime, double step)
+        {
+            double t = Time;
+            while (t<endTime)
+            {
+                if (t+step>endTime)
+                {
+                    step=endTime-t;
+                }
+                Integrate(step);
+                t+=step;
+            }
+        }
+
+        public (double t, StackedVector Y) Euler(double t, StackedVector Y, double step)
+        {
+            var Yp = GetRate(t,Y);
+            return (t+step, Y+step*Yp);
+        }
+        public (double t, StackedVector Y) RungeKutta(double t, StackedVector Y, double step)
+        {
+            // Estimate step size based on maximum rotation corresponding to 1° of rotation
+            double qp_max = Y[1].Max(x=>Math.Abs(x));
+            double est_step = qp_max > 0 ? Math.PI/(180*qp_max) : step;
+            step = Math.Min(est_step, step);
+
+            // Y = { q, qp}
+            // Yp = d/dt Y = f(t,Y)
+            var K0 = GetRate(t, Y);
+            var K1 = GetRate(t + step/2, Y + step/2*K0);
+            var K2 = GetRate(t + step/2, Y + step/2*K1);
+            var K3 = GetRate(t + step, Y + step*K2);
+
+            var ΔY = (step/6) * (K0 + 2*K1 + 2*K2 + K3);
+
+            return (t+step, Y+ΔY);
+        }
+        #endregion
+
+        #region Formatting
+        public override string ToString()
+        {
+            return $"Simulation(Units={Units}, Joints={Joints.Length}, Gravity={Gravity})";
+        }
+        #endregion
+
+        #region Dynamics
+
+        public StackedVector GetRate(double time, StackedVector Y)
+            //tex: $\dot{\rm Y} = f(t,\,{\rm Y})$
+        {
+            int n = joints.Length;
+            var state = new State(this, time, Y);
+            state.DoFeatherstone();
+            return new StackedVector(state.qp, state.qpp);
+        }
+        #endregion
+    }
+}

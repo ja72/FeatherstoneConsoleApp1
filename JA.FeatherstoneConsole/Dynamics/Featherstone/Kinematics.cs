@@ -1,7 +1,7 @@
 ﻿using JA.LinearAlgebra.ScrewCalculus;
 using JA.LinearAlgebra.VectorCalculus;
 
-namespace JA.Dynamics
+namespace JA.Dynamics.Featherstone
 {
     public class Kinematics
     {
@@ -32,7 +32,7 @@ namespace JA.Dynamics
         public void Calculate(State state)
         {
             Simulation simulation = state.simulation;
-            Vector3 gravity = state.gravity;
+            Vector3 gravity = simulation.Gravity;
             var joints = simulation.Joints;
             int[] parents = simulation.Parents;
             int[][] children = simulation.Children;

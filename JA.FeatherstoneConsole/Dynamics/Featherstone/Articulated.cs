@@ -1,7 +1,7 @@
 ﻿using JA.LinearAlgebra.ScrewCalculus;
 using JA.LinearAlgebra.VectorCalculus;
 
-namespace JA.Dynamics
+namespace JA.Dynamics.Featherstone
 {
     public class Articulated
     {
@@ -22,7 +22,7 @@ namespace JA.Dynamics
             int[] parents = simulation.Parents;
             int[][] children = simulation.Children;
             int n = simulation.Dof;
-            Vector3 gravity = state.gravity;
+            Vector3 gravity = simulation.Gravity;
 
             // Propagate Articulated Inertia Down The Chain
             for (int i_joint = n-1; i_joint>=0; i_joint--)

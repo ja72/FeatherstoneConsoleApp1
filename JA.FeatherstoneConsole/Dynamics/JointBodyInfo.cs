@@ -8,14 +8,26 @@ namespace JA.Dynamics
 {
     public enum JointType
     {
+        /// <summary>
+        /// Specifies a joint that allows translational and rotational movement about a single axis.
+        /// </summary>
         [Description("Combined rotation and parallel translation")]
         Screw,
+        /// <summary>
+        /// Specifies a joint that allows pure rotational movement about a single axis.
+        /// </summary>
         [Description("Pure rotation about an axis")]
         Revolute,
+        /// <summary>
+        /// Specifies a joint that allows pure translational movement along a single axis.
+        /// </summary>
         [Description("Pure translation along an axis")]
         Prismatic,
     }
 
+    /// <summary>
+    /// Class to contain information about a joint and body in a mechanical system.
+    /// </summary>
     public class JointBodyInfo : ICanChangeUnits<JointBodyInfo>, ICanChangeUnits
     {
         internal readonly JointType type;
@@ -189,5 +201,23 @@ namespace JA.Dynamics
         }
 
         #endregion
+
+        #region Formatting
+        public override string ToString()
+        {
+            switch (type)
+            {
+                case JointType.Screw:
+                return $"Screw(Units={Units}, LocalPosition={localPosition}, LocalAxis={localAxis}, Pitch={pitch})";
+                case JointType.Revolute:
+                return $"Revolute(Units={Units}, LocalPosition={localPosition}, LocalAxis={localAxis})";
+                case JointType.Prismatic:
+                return $"Prismatic(Units={Units}, LocalPosition={localPosition}, LocalAxis={localAxis})";
+                default:
+                return $"{type}(Units={Units}, LocalPosition={localPosition}, LocalAxis={localAxis}, Pitch={pitch})";
+            }
+        }
+        #endregion
+
     }
 }

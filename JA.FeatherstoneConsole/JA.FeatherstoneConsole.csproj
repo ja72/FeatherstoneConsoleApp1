@@ -108,16 +108,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Dynamics\Articulated.cs" />
+    <Compile Include="Dynamics\Featherstone\Articulated.cs" />
     <Compile Include="Dynamics\Element.cs" />
     <Compile Include="Dynamics\JointBodyInfo.cs" />
-    <Compile Include="Dynamics\Kinematics.cs" />
+    <Compile Include="Dynamics\Featherstone\Kinematics.cs" />
     <Compile Include="Dynamics\Motor.cs" />
     <Compile Include="Dynamics\Simulation.cs" />
     <Compile Include="Dynamics\JointBody.cs" />
     <Compile Include="Dynamics\MassProperties.cs" />
-    <Compile Include="Dynamics\Dynamics.cs" />
-    <Compile Include="Dynamics\State.cs" />
+    <Compile Include="Dynamics\Featherstone\Dynamics.cs" />
+    <Compile Include="Dynamics\Featherstone\State.cs" />
     <Compile Include="Dynamics\World.cs" />
     <Compile Include="ITree.cs" />
     <Compile Include="Program.cs" />
@@ -154,5 +154,6 @@
       <Name>JA.LinearAlgebra</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,6 +5,9 @@ using JA.LinearAlgebra.VectorCalculus;
 
 namespace JA.Dynamics
 {
+    /// <summary>
+    /// Class to describe the structure of a mechanical system
+    /// </summary>
     public class JointBody : JointBodyInfo, ITree<JointBody>, ICanChangeUnits
     {
         internal JointBody parent;
@@ -86,15 +89,6 @@ namespace JA.Dynamics
 
         #endregion
 
-        #region Formatting
-        public override string ToString()
-        {
-            var info = base.ToString();
-
-            return $"{info} #parents={(IsRoot?0:1)}, #children={children.Count}";
-        }
-        #endregion
-
         #region Units
         public override void DoConvert(UnitSystem target)
         {
@@ -106,5 +100,15 @@ namespace JA.Dynamics
         }
 
         #endregion
+
+        #region Formatting
+        public override string ToString()
+        {
+            var info = base.ToString();
+
+            return $"{info} #parents={(IsRoot?0:1)}, #children={children.Count}";
+        }
+        #endregion
+
     }
 }

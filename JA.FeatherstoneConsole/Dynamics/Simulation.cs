@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 
+using JA.Dynamics.Featherstone;
 using JA.LinearAlgebra;
 using JA.LinearAlgebra.ScrewCalculus;
 using JA.LinearAlgebra.VectorCalculus;
@@ -17,10 +18,8 @@ namespace JA.Dynamics
         readonly int[] parents;
         readonly int[][] children;
         readonly List<(double t, StackedVector Y)> history;
-        readonly double[] initialPos, initialVel;
-        internal readonly Kinematics kinematics;
-        internal readonly Articulated articulated;
-        internal readonly Dynamics dynamics;
+        //readonly double[] initialPos, initialVel;
+        readonly State state;
 
         #region Factory
         public Simulation(World world)
@@ -52,20 +51,13 @@ namespace JA.Dynamics
                 }
             }
 
-            initialPos=new double[n];
-            initialVel=new double[n];
             for (int i = 0; i<n; i++)
             {
                 joints[i].DoConvert(Units);
-                var (q, qp)=joints[i].InitialConditions;
-                initialPos[i]=q;
-                initialVel[i]=qp;
             }
-            this.kinematics=new Kinematics(n);
-            this.articulated=new Articulated(n);
-            this.dynamics = new Dynamics(n);
+            this.state = new State(this);
             this.history=new List<(double t, StackedVector Y)>();
-            history.Add((0, new StackedVector(initialPos, initialVel)));
+            history.Add((0, new StackedVector(state.q, state.qp)));
         }
 
 
@@ -87,8 +79,8 @@ namespace JA.Dynamics
         public void Reset()
         {
             this.history.Clear();
-            int n = joints.Length;
-            history.Add((0, new StackedVector(initialPos, initialVel)));
+            state.Reset();
+            history.Add((0, new StackedVector(state.q, state.qp)));
         }
         public void AddSolution(double t, StackedVector Y)
         {
@@ -157,9 +149,7 @@ namespace JA.Dynamics
         public StackedVector GetRate(double time, StackedVector Y)
             //tex: $\dot{\rm Y} = f(t,\,{\rm Y})$
         {
-            int n = joints.Length;
-            var state = new State(this, time, Y);
-            state.DoFeatherstone();
+            state.DoFeatherstone(time, Y);
             return new StackedVector(state.qp, state.qpp);
         }
         #endregion

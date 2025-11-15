@@ -5,12 +5,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Vectors;
 
-using static JA.Dynamics.Element;
 
 namespace JA.Dynamics
 {
+
+    using Element = Experimental.Element;
 
     public class World : ICanChangeUnits
     {

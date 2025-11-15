@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Vectors;
 
 namespace JA.Dynamics
 {

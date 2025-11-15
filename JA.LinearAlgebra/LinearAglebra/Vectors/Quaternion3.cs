@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace JA.LinearAlgebra.VectorCalculus
+namespace JA.LinearAlgebra.Vectors
 {
     /// <summary>
     /// Immutable quaternion using double precision. 
@@ -58,13 +58,16 @@ namespace JA.LinearAlgebra.VectorCalculus
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion3 Subtract(Quaternion3 a, Quaternion3 b) => new Quaternion3(a.w - b.w, a.x - b.x, a.y - b.y, a.z - b.z);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Quaternion3 Inverse()
+        public Quaternion3 Inverse() => Inverse(this);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Quaternion3 Inverse(Quaternion3 q)
         {
-            if (!TryInverse(out var inv))
-                throw new InvalidOperationException("Cannot invert a quaternion with zero magnitude.");
-            return inv;
+            if (q.TryInverse(out var inv))
+            {
+                return inv;
+            }
+            throw new InvalidOperationException("Cannot invert quaternion.");
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion3 Multiply(Quaternion3 a, Quaternion3 b)
             => new Quaternion3(
@@ -110,23 +113,6 @@ namespace JA.LinearAlgebra.VectorCalculus
             return new Quaternion3(c, naxis.X * s, naxis.Y * s, naxis.Z * s);
         }
 
-        /// <summary>
-        /// Rotate a vector by this quaternion.
-        /// Uses optimized formula: v' = v + 2 * cross(qv, cross(qv, v) + w * v)
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 Rotate(Vector3 b, bool inverse = false)
-        {
-            var v = VectorPart;
-            var w = ScalarPart;
-            var vxb = Vector3.Cross(v, b);
-            var vxb2 = Vector3.Scale(vxb, 2.0);
-            if(inverse)
-            {
-                w=-w;
-            }
-            return b + vxb2 * w + Vector3.Cross(v, vxb2);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion3 Normalize()
@@ -155,6 +141,18 @@ namespace JA.LinearAlgebra.VectorCalculus
             result = Divide(this, len);
             return true;
         }
+        /// <summary>
+        /// Rotate a vector by this quaternion.
+        /// Uses optimized formula: v' = v + 2 * cross(qv, cross(qv, v) + w * v)
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 RotateVector(Vector3 b, bool inverse = false) => RotateVector(this, b, inverse);
+        /// <summary>
+        /// Rotate a vector by this quaternion.
+        /// Uses optimized formula: v' = v + 2 * cross(qv, cross(qv, v) + w * v)
+        /// </summary>
+        public static Vector3 RotateVector(Quaternion3 rotation, Vector3 vector, bool inverse = false) 
+            => Vector3.Transform(vector, rotation, inverse);
 
         public bool Equals(Quaternion3 other)
         {

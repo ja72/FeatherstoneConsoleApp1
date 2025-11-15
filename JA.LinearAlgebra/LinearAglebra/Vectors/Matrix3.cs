@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 using static System.Math;
 
-namespace JA.LinearAlgebra.VectorCalculus
+namespace JA.LinearAlgebra.Vectors
 {
 
     /// <summary>

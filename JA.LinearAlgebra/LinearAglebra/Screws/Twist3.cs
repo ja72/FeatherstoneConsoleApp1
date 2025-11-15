@@ -1,11 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace JA.LinearAlgebra.ScrewCalculus
+namespace JA.LinearAlgebra.Screws
 {
     //using JA.LinearAlgebra.VectorCalculus;
     
-    using Vector3 = VectorCalculus.Vector3;
-    using Matrix3 = VectorCalculus.Matrix3;
+    using Vector3 = Vectors.Vector3;
+    using Matrix3 = Vectors.Matrix3;
 
     public static class Twist3
     {

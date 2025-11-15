@@ -12,75 +12,75 @@ namespace JA.LinearAlgebra.Geometry
 {
 
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class Element
+    public class Face
     {
-        public Element(Color color, params int[] face)
+        public Face(Color color, params int[] face)
         {
             Color=color;
-            Face=face;
+            NodeIndex=face;
         }
 
-        public int[] Face { get; }
+        public int[] NodeIndex { get; }
         public Color Color { get; set; }
 
         public void Flip()
         {
-            Array.Copy(Face.Reverse().ToArray(), Face, Face.Length);
+            Array.Copy(NodeIndex.Reverse().ToArray(), NodeIndex, NodeIndex.Length);
         }
         public override string ToString()
         {
-            return $"Face(Color={Color}, Nodes=[{string.Join(",", Face)}])";
+            return $"Face(Color={Color}, Nodes=[{string.Join(",", NodeIndex)}])";
         }
     }
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class Mesh : ICanChangeUnits<Mesh>
+    public class Mesh3 : ICanChangeUnits<Mesh3>
     {
         readonly List<Vector3> nodeList;
-        readonly List<Element> elementList;
+        readonly List<Face> faceList;
 
         #region Factory
-        public Mesh(UnitSystem units)
+        public Mesh3(UnitSystem units)
         {
             Units=units;
             nodeList=new List<Vector3>();
-            elementList=new List<Element>();
+            faceList=new List<Face>();
         }
 
-        public Mesh(Mesh copy)
+        public Mesh3(Mesh3 copy)
         {
             Units=copy.Units;
             nodeList=new List<Vector3>(copy.nodeList);
-            elementList=new List<Element>(copy.elementList);
+            faceList=new List<Face>(copy.faceList);
         }
 
-        Mesh(UnitSystem units, IEnumerable<Vector3> nodeList, IEnumerable<Element> elementList) : this(units)
+        Mesh3(UnitSystem units, IEnumerable<Vector3> nodeList, IEnumerable<Face> elementList) : this(units)
         {
             Units=units;
             this.nodeList=new List<Vector3>(nodeList);
-            this.elementList=new List<Element>(elementList);
+            this.faceList=new List<Face>(elementList);
         }
         #endregion
 
         #region Properties
         public UnitSystem Units { get; }
-        public Mesh ToConverted(UnitSystem target)
+        public Mesh3 ToConverted(UnitSystem target)
         {
             if (Units!=target)
             {
                 float fl = Unit.Length.Convert(Units, target);
-                return new Mesh(target,
+                return new Mesh3(target,
                     nodeList.Select((n) => fl*n),
-                    elementList);
+                    faceList);
             }
             return this;
         }
 
         [Browsable(false)] public List<Vector3> NodeList => nodeList;
-        [Browsable(false)] public List<Element> ElementList => elementList;
+        [Browsable(false)] public List<Face> ElementList => faceList;
 
         public Vector3[] Nodes { get => nodeList.ToArray(); }
         [Browsable(false)]
-        public Element[] Elements { get => elementList.ToArray(); }
+        public Face[] Elements { get => faceList.ToArray(); }
         #endregion
 
         #region Structure
@@ -102,7 +102,7 @@ namespace JA.LinearAlgebra.Geometry
         {
             for (int c = 0; c<level; c++)
             {
-                for (int i = elementList.Count-1; i>=0; i--)
+                for (int i = faceList.Count-1; i>=0; i--)
                 {
                     TesselateFace(i);
                 }
@@ -110,12 +110,12 @@ namespace JA.LinearAlgebra.Geometry
         }
         public void TesselateFace(int index)
         {
-            var face = elementList[index].Face;
-            var color = elementList[index].Color;
+            var face = faceList[index].NodeIndex;
+            var color = faceList[index].Color;
             var nodes = face.Select(ni => nodeList[ni]).ToArray();
             if (nodes.Length==4)
             {
-                elementList.RemoveAt(index);
+                faceList.RemoveAt(index);
                 // assume quadrelateral and split all four sides.
                 // [f2]---[ 1]---[f1]
                 // |    C   |   B   |
@@ -138,7 +138,7 @@ namespace JA.LinearAlgebra.Geometry
             }
             else if (nodes.Length>=3)
             {
-                elementList.RemoveAt(index);
+                faceList.RemoveAt(index);
                 int k = nodeList.Count;
                 var center = nodes.Aggregate(Vector3.Zero, (a, b) => a + b) / nodes.Length;
                 nodeList.Add(center);
@@ -158,10 +158,10 @@ namespace JA.LinearAlgebra.Geometry
         /// <param name="faceIndex">The face index.</param>
         public Vector3[] GetFaceNodes(int faceIndex)
         {
-            return elementList[faceIndex].Face.Select(ni => nodeList[ni]).ToArray();
+            return faceList[faceIndex].NodeIndex.Select(ni => nodeList[ni]).ToArray();
         }
-        public Triangle[] GetTriangles(int faceIndex) => GetPolygon(faceIndex).GetTriangles();
-        public Polygon GetPolygon(int index) => new Polygon(GetFaceNodes(index));
+        public Triangle3[] GetTriangles(int faceIndex) => GetPolygon(faceIndex).GetTriangles();
+        public Polygon3 GetPolygon(int index) => new Polygon3(GetFaceNodes(index));
 
         /// <summary>
         /// Gets the normal vector of a face, applying the mesh transformation.
@@ -229,11 +229,11 @@ namespace JA.LinearAlgebra.Geometry
                     nodeList.Add(nodes[i]);
                 }
             }
-            elementList.Add(new Element(color, nodeIndex));
+            faceList.Add(new Face(color, nodeIndex));
         }
         public void AddFace(Color color, params int[] nodeIndex)
         {
-            elementList.Add(new Element(color, nodeIndex));
+            faceList.Add(new Face(color, nodeIndex));
         }
         /// <summary>
         /// Adds a square panel as a face.
@@ -263,34 +263,34 @@ namespace JA.LinearAlgebra.Geometry
 
         #region Transformations
         //public Vector3[] GetNodes() => nodeList.ToArray();
-        public Mesh Scale(float factor)
+        public Mesh3 Scale(float factor)
         {
-            return new Mesh(Units, nodeList.Select((n) => factor*n), elementList);
+            return new Mesh3(Units, nodeList.Select((n) => factor*n), faceList);
         }
-        public Mesh Offset(Vector3 offset)
+        public Mesh3 Offset(Vector3 offset)
         {
-            return new Mesh(Units, nodeList.Select((n) => n+offset), elementList);
+            return new Mesh3(Units, nodeList.Select((n) => n+offset), faceList);
         }
-        public Mesh Transform(Matrix4x4 transform, bool inverse = false)
+        public Mesh3 Transform(Matrix4x4 transform, bool inverse = false)
         {
             if (inverse)
             {
                 Matrix4x4.Invert(transform, out var inv);
-                return new Mesh(Units, nodeList.Select((n) => Vector3.Transform(n, inv)), elementList);
+                return new Mesh3(Units, nodeList.Select((n) => Vector3.Transform(n, inv)), faceList);
             }
-            return new Mesh(Units, nodeList.Select((n) => Vector3.Transform(n, transform)), elementList);
+            return new Mesh3(Units, nodeList.Select((n) => Vector3.Transform(n, transform)), faceList);
         }
-        public Mesh Rotate(Quaternion rotation)
+        public Mesh3 Rotate(Quaternion rotation)
         {
-            return new Mesh(Units,
+            return new Mesh3(Units,
                 nodeList.Select((n) => Vector3.Transform(n, rotation)),
-                elementList);
+                faceList);
         }
-        public Mesh Rotate(Quaternion rotation, Vector3 pivot)
+        public Mesh3 Rotate(Quaternion rotation, Vector3 pivot)
         {
-            return new Mesh(Units,
+            return new Mesh3(Units,
                 nodeList.Select((n) => pivot+Vector3.Transform(n-pivot, rotation)),
-                elementList);
+                faceList);
         }
 
         #endregion
@@ -298,7 +298,7 @@ namespace JA.LinearAlgebra.Geometry
         #region Formatting
         public override string ToString()
         {
-            return $"Mesh(Nodes={nodeList.Count}, Elements={elementList.Count})";
+            return $"Mesh(Nodes={nodeList.Count}, Elements={faceList.Count})";
         }
         #endregion
 
@@ -310,9 +310,9 @@ namespace JA.LinearAlgebra.Geometry
         /// <param name="sizeX">The size of the cube in the x-axis.</param>
         /// <param name="sizeY">The size of the cube in the y-axis.</param>
         /// <param name="sizeZ">The size of the cube in the z-axis.</param>
-        public static Mesh CreateCube(UnitSystem units, Color color, float sizeX, float sizeY, float sizeZ)
+        public static Mesh3 CreateCube(UnitSystem units, Color color, float sizeX, float sizeY, float sizeZ)
         {
-            var mesh = new Mesh(units);
+            var mesh = new Mesh3(units);
             mesh.AddPanel(
                 color,
                 new Vector3(0, sizeY/2, 0),
@@ -346,10 +346,10 @@ namespace JA.LinearAlgebra.Geometry
             return mesh;
         }
 
-        public static Mesh CreateCube(UnitSystem units, Color color, float size)
+        public static Mesh3 CreateCube(UnitSystem units, Color color, float size)
             => CreateCube(units, color, size, size, size);
 
-        public static Mesh CreateSphere(UnitSystem units, Color color, float radius)
+        public static Mesh3 CreateSphere(UnitSystem units, Color color, float radius)
         {
             var mesh = CreateCube(units, color, 1f);
             mesh.Tesselate(3);
@@ -373,28 +373,28 @@ namespace JA.LinearAlgebra.Geometry
         /// <param name="color">The face color.</param>
         /// <param name="base">The size of the base.</param>
         /// <param name="height">The height of the pyramid.</param>
-        public static Mesh CreatePyramid(UnitSystem units, Color color, float @base, float height)
+        public static Mesh3 CreatePyramid(UnitSystem units, Color color, float @base, float height)
         {
-            var mesh = new Mesh(units);
+            var mesh = new Mesh3(units);
             mesh.nodeList.Add(new Vector3(-@base/2, -@base/2, 0));
             mesh.nodeList.Add(new Vector3(@base/2, -@base/2, 0));
             mesh.nodeList.Add(new Vector3(@base/2, @base/2, 0));
             mesh.nodeList.Add(new Vector3(-@base/2, @base/2, 0));
-            mesh.elementList.Add(new Element(color, 3, 2, 1, 0));
+            mesh.faceList.Add(new Face(color, 3, 2, 1, 0));
             mesh.nodeList.Add(height*Vector3.UnitZ);
-            mesh.elementList.Add(new Element(color, 4, 0, 1));
-            mesh.elementList.Add(new Element(color, 4, 1, 2));
-            mesh.elementList.Add(new Element(color, 4, 2, 3));
-            mesh.elementList.Add(new Element(color, 4, 3, 0));
+            mesh.faceList.Add(new Face(color, 4, 0, 1));
+            mesh.faceList.Add(new Face(color, 4, 1, 2));
+            mesh.faceList.Add(new Face(color, 4, 2, 3));
+            mesh.faceList.Add(new Face(color, 4, 3, 0));
 
             return mesh;
         }
         #endregion
 
         #region Imports
-        public static bool ImportSTL(UnitSystem unit, string filePath, Color color, out Mesh mesh)
+        public static bool ImportSTL(UnitSystem unit, string filePath, Color color, out Mesh3 mesh)
             => ImportSTL(unit, filePath, color, out mesh, Vector3.Zero);
-        public static bool ImportSTL(UnitSystem unit, string filePath, Color color, out Mesh mesh, Vector3 localOrigin)
+        public static bool ImportSTL(UnitSystem unit, string filePath, Color color, out Mesh3 mesh, Vector3 localOrigin)
         {
             Vector3 Text_ReadVector3(string lineString)
             {
@@ -417,7 +417,7 @@ namespace JA.LinearAlgebra.Geometry
                 return vert;
             }
 
-            mesh=new Mesh(unit);
+            mesh=new Mesh3(unit);
             bool isBinary;
 
             if (File.Exists(filePath))

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JA.LinearAlgebra.VectorCalculus
+namespace JA.LinearAlgebra.Vectors
 {
     public readonly struct Pose3 : ICanChangeUnits<Pose3>
     {
@@ -48,7 +48,7 @@ namespace JA.LinearAlgebra.VectorCalculus
             local=local.ToConverted(units); 
             // [p3, R3] = [p1 + R1 p2, R1 R2]
             var topOrientation = @base.orientation * local.orientation;
-            var topPosition = @base.position + @base.orientation.Rotate(local.position);
+            var topPosition = @base.position + @base.orientation.RotateVector(local.position);
             return new Pose3(units, topPosition, topOrientation);
         }
         public static Pose3 Subtract(Pose3 top, Pose3 local)
@@ -57,14 +57,14 @@ namespace JA.LinearAlgebra.VectorCalculus
             local=local.ToConverted(units); 
             // [p1, R1] = [p3 - R3 R2^T p2, R3 R2^T]
             var baseOrientation = top.orientation * Quaternion3.Conjugate(local.orientation);
-            var basePosition = top.position - baseOrientation.Rotate(local.position);
+            var basePosition = top.position - baseOrientation.RotateVector(local.position);
             return new Pose3(units, basePosition, baseOrientation);
         }
         public Pose3 Inverse()
         {
             // [p2, R2] = [-R2^T p2, R2^T]
             var invOrientation = Quaternion3.Conjugate(this.orientation);
-            var invPosition = invOrientation.Rotate(-this.position);
+            var invPosition = invOrientation.RotateVector(-this.position);
             return new Pose3(Units, invPosition, invOrientation);
         }
         public static Pose3 operator +(Pose3 a, Pose3 b) => Add(a, b);

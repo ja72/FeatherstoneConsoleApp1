@@ -2,7 +2,7 @@
 using System.ComponentModel;
 
 using JA.LinearAlgebra;
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Vectors;
 
 namespace JA.Dynamics.Featherstone
 {

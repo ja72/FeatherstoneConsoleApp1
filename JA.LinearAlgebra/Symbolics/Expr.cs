@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace JA.Dynamics
+namespace JA.Symbolics
 {
     public enum UnaryFunction
     {
@@ -30,6 +31,10 @@ namespace JA.Dynamics
         Min,
         Max,
     }
+    public delegate double NonaryFunc();
+    public delegate double UnaryFunc( double x1 );
+    public delegate double BinaryFunc( double x1, double x2 );
+    public delegate double TertiaryFunc( double x1, double x2, double x3 );
 
     public abstract class Expr : IEquatable<Expr>, IFormattable
     {
@@ -394,6 +399,42 @@ namespace JA.Dynamics
         }
         #endregion
 
+        #region Conversions
+        public abstract Expression GetExpression();
+
+        public NonaryFunc ToFunction()
+        {
+            var body = GetExpression();
+            var lambda = Expression.Lambda<NonaryFunc>(body);
+            return lambda.Compile();
+        }
+        public UnaryFunc ToFunction(Expr x1)
+        {
+            var p1 = x1.GetExpression() as ParameterExpression;                
+            var body = GetExpression();
+            var lambda = Expression.Lambda<UnaryFunc>(body, p1);
+            return lambda.Compile();
+        }
+        public BinaryFunc ToFunction(Expr x1, Expr x2)
+        {
+            var p1 = x1.GetExpression() as ParameterExpression;                
+            var p2 = x2.GetExpression() as ParameterExpression;                
+            var body = GetExpression();
+            var lambda = Expression.Lambda<BinaryFunc>(body, p1, p2);
+            return lambda.Compile();
+        }
+        public TertiaryFunc ToFunction(Expr x1, Expr x2, Expr  x3)
+        {
+            var p1 = x1.GetExpression() as ParameterExpression;                
+            var p2 = x2.GetExpression() as ParameterExpression;                
+            var p3 = x3.GetExpression() as ParameterExpression;  
+            var body = GetExpression();
+            var lambda = Expression.Lambda<TertiaryFunc>(body, p1, p2, p3);
+            return lambda.Compile();
+        }
+
+        #endregion
+
         #region Operators        
         public static Expr operator -(Expr rhs) { return Negate(rhs); }
         public static Expr operator *(double factor, Expr expr) => Scale(factor, expr);
@@ -459,6 +500,11 @@ namespace JA.Dynamics
                 return this.value.ToString(formatting, formatProvider);
             }
 
+            public override Expression GetExpression()
+            {
+                return Expression.Constant(value, typeof(double));
+            }
+
             public override bool Equals(Expr other)
             {
                 if (other is ConstExpr otherExpr)
@@ -514,7 +560,10 @@ namespace JA.Dynamics
             {
                 return name.ToString();
             }
-
+            public override Expression GetExpression()
+            {
+                return Expression.Parameter(typeof(double), name);
+            }
             public override bool Equals(Expr other)
             {
                 if (other is VariableExpr otherExpr)
@@ -575,7 +624,12 @@ namespace JA.Dynamics
                     return $"{x}*{y}";
                 }
             }
-
+            public override Expression GetExpression()
+            {
+                var argExpr = Argument.GetExpression();
+                Expression factorExpr = Expression.Constant(factor, typeof(double));
+                return Expression.Multiply(factorExpr, argExpr);
+            }
             public override bool Equals(Expr other)
             {
                 if (other is ScaleExpr otherExpr)
@@ -600,7 +654,6 @@ namespace JA.Dynamics
         public class RaiseExpr : UnaryExprBase
         {
             readonly double exponent;
-
             public RaiseExpr(Expr argument, double expoent) : base(argument)
             {
                 this.exponent=expoent;
@@ -619,6 +672,12 @@ namespace JA.Dynamics
                 string x = Argument.ToString(formatting, formatProvider);
                 string n = ((float)exponent).ToString(formatting, formatProvider);
                 return $"{x}^{n}";
+            }
+            public override Expression GetExpression()
+            {
+                var argExpr = Argument.GetExpression();
+                var exponentExpr = Expression.Constant(exponent, typeof(double));
+                return Expression.Call(typeof(Math).GetMethod("Pow", new Type[] { typeof(double), typeof(double) }), argExpr, exponentExpr);
             }
 
             public override bool Equals(Expr other)
@@ -716,6 +775,18 @@ namespace JA.Dynamics
                     throw new NotSupportedException(function.ToString());
                 }
             }
+            public override Expression GetExpression()
+            {
+                var argExpr = Argument.GetExpression();
+
+                if(function==UnaryFunction.Neg )
+                {
+                    return Expression.Negate(argExpr);
+                }
+                string methodName = function.ToString();
+
+                return Expression.Call(typeof(Math).GetMethod(methodName, new Type[] { typeof(double) }), argExpr);
+            }
 
             public override bool Equals(Expr other)
             {
@@ -793,6 +864,8 @@ namespace JA.Dynamics
                     throw new NotSupportedException(Operator.ToString());
                 }
             }
+
+            #region Formatting
             public override string ToString(string formatting, IFormatProvider formatProvider)
             {
                 string x =Left.ToString(formatting, formatProvider);
@@ -839,17 +912,39 @@ namespace JA.Dynamics
                     throw new NotSupportedException(Operator.ToString());
                 }
             }
+            #endregion
 
-            public override int GetHashCode()
+            public override Expression GetExpression()
             {
-                unchecked
+                var leftExpr = Left.GetExpression();
+                var righExpr = Right.GetExpression();
+
+                switch (Operator)
                 {
-                    int hc = -1817952719;
-                    hc=( -1521134295 )*hc+Operator.GetHashCode();
-                    hc=( -1521134295 )*hc+Left.GetHashCode();
-                    hc=( -1521134295 )*hc+Right.GetHashCode();
-                    return hc;
+                    case BinaryOperator.Add:
+                        return Expression.Add(leftExpr, righExpr);
+                    case BinaryOperator.Subtract:
+                        return Expression.Subtract(leftExpr, righExpr);
+                    case BinaryOperator.Multiply:
+                        return Expression.Multiply(leftExpr, righExpr);
+                    case BinaryOperator.Divide:
+                        return Expression.Divide(leftExpr, righExpr);
+                    case BinaryOperator.Power:
+                        return Expression.Power(leftExpr, righExpr);
+                    case BinaryOperator.Hypot:
+                        return Expression.Call(typeof(Math).GetMethod("Sqrt", new Type[] { typeof(double) }),
+                            Expression.Add(
+                                Expression.Multiply(leftExpr, leftExpr),
+                                Expression.Multiply(righExpr, righExpr)
+                            ));
+                    case BinaryOperator.Min:
+                        return Expression.Call(typeof(Math).GetMethod("Min", new Type[] { typeof(double), typeof(double) }), leftExpr, righExpr);
+                    case BinaryOperator.Max:
+                        return Expression.Call(typeof(Math).GetMethod("Max", new Type[] { typeof(double), typeof(double) }), leftExpr, righExpr);
+                    default:
+                        throw new NotSupportedException(Operator.ToString());
                 }
+
             }
 
             public override bool Equals(Expr other)
@@ -861,6 +956,17 @@ namespace JA.Dynamics
                         &&Right.Equals(otherExpr.Right);
                 }
                 return false;
+            }
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hc = -1817952719;
+                    hc=( -1521134295 )*hc+Operator.GetHashCode();
+                    hc=( -1521134295 )*hc+Left.GetHashCode();
+                    hc=( -1521134295 )*hc+Right.GetHashCode();
+                    return hc;
+                }
             }
         }
         #endregion

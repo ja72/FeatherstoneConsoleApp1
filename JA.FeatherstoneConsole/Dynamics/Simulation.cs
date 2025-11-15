@@ -6,8 +6,8 @@ using System.Linq;
 
 using JA.Dynamics.Featherstone;
 using JA.LinearAlgebra;
-using JA.LinearAlgebra.ScrewCalculus;
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Screws;
+using JA.LinearAlgebra.Vectors;
 
 namespace JA.Dynamics
 {

@@ -4,10 +4,8 @@ using System.Diagnostics;
 
 using static System.Math;
 
-namespace JA.LinearAlgebra.VectorCalculus
+namespace JA.LinearAlgebra.Vectors
 {
-    using static JA.Numerics;
-
     /// <summary>
     /// Polar and SVD decompositions of 3×3 matrices.
     /// </summary>
@@ -57,6 +55,7 @@ namespace JA.LinearAlgebra.VectorCalculus
             D=new Matrix3(D11, 0, 0, 0, D22, 0, 0, 0, D33);
         }
         #endregion
+
         #region SVD
         public static void mat3_svd_stable(Matrix3 M, out Matrix3 U, out Vector3 s, out Matrix3 V)
         // More numerically stable version of mat3_svd

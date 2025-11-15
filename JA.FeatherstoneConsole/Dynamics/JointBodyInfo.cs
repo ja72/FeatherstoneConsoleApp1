@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
-using JA.LinearAlgebra.ScrewCalculus;
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Screws;
+using JA.LinearAlgebra.Vectors;
 
 namespace JA.Dynamics
 {
@@ -123,7 +123,7 @@ namespace JA.Dynamics
         #region Mechanics
         public Vector33 GetJointAxis(Pose3 top)
         {
-            Vector3 axis = top.Orientation.Rotate(localAxis);
+            Vector3 axis = top.Orientation.RotateVector(localAxis);
             switch (type)
             {
                 case JointType.Screw:

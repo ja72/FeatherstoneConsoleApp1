@@ -1,13 +1,15 @@
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using JA.LinearAlgebra.ScrewCalculus;
+using JA.LinearAlgebra.Geometry;
+using JA.LinearAlgebra.Screws;
 
 using static System.Math;
 
-namespace JA.LinearAlgebra.VectorCalculus
+namespace JA.LinearAlgebra.Vectors
 {
 
     public enum Axis
@@ -63,6 +65,8 @@ namespace JA.LinearAlgebra.VectorCalculus
             double phi = 2*PI*rng.NextDouble();
             return FromSpherical(UnitZ, UnitX, magnitude, theta, phi);
         }
+        public static Vector3 FromCartesian(double x, double y, double z)
+            => new Vector3(x, y, z);
         public static Vector3 FromPolar(Vector3 axis, Vector3 reference, double radius, double theta)
             => FromCylindrical(axis, reference, radius, theta, 0);
         public static Vector3 FromCylindrical(Vector3 axis, Vector3 reference, double radius, double azimuth, double z)
@@ -127,6 +131,42 @@ namespace JA.LinearAlgebra.VectorCalculus
         #endregion
 
         #region Algebra
+        public static Vector3 Transform(Vector3 vector, Quaternion3 rotation, bool inverse = false)
+        {
+            var nx = rotation.x;
+            var ny = rotation.y;
+            var nz = rotation.z;
+            var w = !inverse ? rotation.w : -rotation.w;
+
+            var nx2 = nx + nx;
+            var ny2 = ny + ny;
+            var nz2 = nz + nz;
+            var wnx2 = w * nx2;
+            var wny2 = w * ny2;
+            var wnz2 = w * nz2;
+            var nxnx2 = nx * nx2;
+            var nxny2 = nx * ny2;
+            var nxnz2 = nx * nz2;
+            var nyny2 = ny * ny2;
+            var nynz2 = ny * nz2;
+            var nznz2 = nz * nz2;
+            var r11 = 1 - nyny2 - nznz2;
+            var r12 = nxny2 - wnz2;
+            var r13 = nxnz2 + wny2;
+            var r21 = nxny2 + wnz2;
+            var r22 = 1 - nxnx2 - nznz2;
+            var r23 = nynz2 - wnx2;
+            var r31 = nxnz2 - wny2;
+            var r32 = nynz2 + wnx2;
+            var r33 = 1 - nxnx2 - nyny2;
+            var x = vector.X;
+            var y = vector.Y;
+            var z = vector.Z;
+            return new Vector3(
+                x * r11 + y * r12 + z * r13, 
+                x * r21 + y * r22 + z * r23, 
+                x * r31 + y * r32 + z * r33);            
+        }
 
         public static double MaxAbs(Vector3 a) 
             => Max(Abs(a.x), Max(Abs(a.y), Abs(a.z)));

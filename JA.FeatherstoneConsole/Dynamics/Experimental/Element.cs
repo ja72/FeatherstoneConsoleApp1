@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Vectors;
 
-namespace JA.Dynamics
+namespace JA.Dynamics.Experimental
 {
     public abstract class Element : ITree<Element>
     {
@@ -112,6 +112,7 @@ namespace JA.Dynamics
 
         public class Link : Element
         {
+            #region Factory
             public Link(Pose3 localStep, MassProperties massProperties) : base()
             {
                 this.LocalStep=localStep.ToConverted(Units);
@@ -121,17 +122,23 @@ namespace JA.Dynamics
             {
                 this.LocalStep=localStep.ToConverted(Units);
                 this.MassProperties=massProperties.ToConverted(Units);
-            }
+            } 
+            #endregion
+
+            #region Properties
             public override bool IsJoint => false;
             public Pose3 LocalStep { get; protected set; }
-            public MassProperties MassProperties { get; protected set; }
+            public MassProperties MassProperties { get; protected set; } 
+            #endregion
 
+            #region Units
             public override void DoConvert(UnitSystem target)
             {
                 LocalStep=LocalStep.ToConverted(target);
                 MassProperties=MassProperties.ToConverted(target);
                 base.DoConvert(target);
-            }
+            } 
+            #endregion
         }
 
         public class Joint : Element
@@ -202,6 +209,7 @@ namespace JA.Dynamics
             }
             #endregion
 
+            #region Units
             public override void DoConvert(UnitSystem target)
             {
                 float f_len = Unit.Length.Convert(Units, target);
@@ -211,7 +219,8 @@ namespace JA.Dynamics
                 pitch*=f_len;
 
                 base.DoConvert(target);
-            }
+            } 
+            #endregion
         }
 
 

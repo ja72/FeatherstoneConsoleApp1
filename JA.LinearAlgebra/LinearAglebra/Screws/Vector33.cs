@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 
 using static System.Math;
 
-namespace JA.LinearAlgebra.ScrewCalculus
+namespace JA.LinearAlgebra.Screws
 {
     //using JA.LinearAlgebra.VectorCalculus;
 
-    using Vector3 = VectorCalculus.Vector3;
+    using Vector3 = Vectors.Vector3;
 
     public enum ScrewLayout
     {

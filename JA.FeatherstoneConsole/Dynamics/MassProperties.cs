@@ -6,19 +6,19 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using JA.LinearAlgebra.ScrewCalculus;
+using JA.LinearAlgebra.Screws;
 
 
 namespace JA.Dynamics
 {
-    using Vector3 = JA.LinearAlgebra.VectorCalculus.Vector3;
-    using Matrix3 = JA.LinearAlgebra.VectorCalculus.Matrix3;
-    using Quaternion3 = JA.LinearAlgebra.VectorCalculus.Quaternion3;
-    using Pose3 = JA.LinearAlgebra.VectorCalculus.Pose3;
-    using Mesh = JA.LinearAlgebra.Geometry.Mesh;
+    using Vector3 = JA.LinearAlgebra.Vectors.Vector3;
+    using Matrix3 = JA.LinearAlgebra.Vectors.Matrix3;
+    using Quaternion3 = JA.LinearAlgebra.Vectors.Quaternion3;
+    using Pose3 = JA.LinearAlgebra.Vectors.Pose3;
+    using Mesh3 = JA.LinearAlgebra.Geometry.Mesh3;
 
-    using Vector33 = JA.LinearAlgebra.ScrewCalculus.Vector33;
-    using Matrix33 = JA.LinearAlgebra.ScrewCalculus.Matrix33;
+    using Vector33 = JA.LinearAlgebra.Screws.Vector33;
+    using Matrix33 = JA.LinearAlgebra.Screws.Matrix33;
 
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public readonly struct MassProperties :
@@ -108,20 +108,20 @@ namespace JA.Dynamics
         public static MassProperties Box(Material material, float width, float height, float thickness) 
             => Box(material.Units, material.Density*width*height*thickness, width, height, thickness);
 
-        public static MassProperties FromMeshAndMass(Mesh mesh, float mass)
+        public static MassProperties FromMeshAndMass(Mesh3 mesh, float mass)
         {
             GetVolumeProperties(mesh, out _, out var c, out var I);
             I *= mass;
             return new MassProperties(mesh.Units, mass, I, c);
         }
-        public static MassProperties FromMeshAndDensity(Mesh mesh, float density)
+        public static MassProperties FromMeshAndDensity(Mesh3 mesh, float density)
         {
             GetVolumeProperties(mesh, out var volume, out var c, out var I);
             float mass = density * volume;
             I *= mass;
             return new MassProperties(mesh.Units, mass, I, c);
         }
-        static void GetVolumeProperties(Mesh mesh, out float volume, out Vector3 center, out Matrix3 specificMmoi)
+        static void GetVolumeProperties(Mesh3 mesh, out float volume, out Vector3 center, out Matrix3 specificMmoi)
         {
             volume = 0;
             center = Vector3.Zero;

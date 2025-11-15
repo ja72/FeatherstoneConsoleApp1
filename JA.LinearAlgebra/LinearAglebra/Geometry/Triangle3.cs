@@ -7,9 +7,10 @@ using JA.LinearAlgebra.Geometry;
 
 namespace JA.LinearAlgebra.Geometry
 {
-    public readonly struct Triangle 
+    public readonly struct Triangle3 : ICanConvertUnits<Triangle3>
     {
-        public Triangle(params Vector3[] nodes) : this()
+        public const float ZERO_TOL = 1e-6f;
+        public Triangle3(params Vector3[] nodes) : this()
         {
             if (nodes.Length != 3)
             {
@@ -19,7 +20,7 @@ namespace JA.LinearAlgebra.Geometry
             B = nodes[1];
             C = nodes[2];
         }
-        public Triangle(Vector3 a, Vector3 b, Vector3 c) : this()
+        public Triangle3(Vector3 a, Vector3 b, Vector3 c) : this()
         {
             A = a;
             B = b;
@@ -101,7 +102,7 @@ namespace JA.LinearAlgebra.Geometry
             return coord.w_A*A + coord.w_B*B + coord.w_C*C;
         }
 
-        public bool Contains(Vector3 point, float distanceTolerance = 1e-6f)
+        public bool Contains(Vector3 point, float distanceTolerance = ZERO_TOL)
         {
             if (Math.Abs(Vector3.Dot(Normal, point-A))<= distanceTolerance)
             {
@@ -115,41 +116,41 @@ namespace JA.LinearAlgebra.Geometry
 
         #region Geometry
         public Vector3[] GetNodes() => new Vector3[] { A, B, C };
-        public Triangle Scale(float factor)
+        public Triangle3 Scale(float factor)
         {
-            return new Triangle(GetNodes().Select((n) => factor*n).ToArray());
+            return new Triangle3(GetNodes().Select((n) => factor*n).ToArray());
         }
-        public Triangle Offset(Vector3 offset)
+        public Triangle3 Offset(Vector3 offset)
         {
-            return new Triangle(GetNodes().Select((n) => n + offset).ToArray());
+            return new Triangle3(GetNodes().Select((n) => n + offset).ToArray());
         }
-        public Triangle Transform(Matrix4x4 transform, bool inverse = false)
+        public Triangle3 Transform(Matrix4x4 transform, bool inverse = false)
         {
             if (inverse)
             {
                 Matrix4x4.Invert(transform, out var inv);
-                return new Triangle(GetNodes().Select((n) => Vector3.Transform(n, inv)).ToArray());
+                return new Triangle3(GetNodes().Select((n) => Vector3.Transform(n, inv)).ToArray());
             }
-            return new Triangle(GetNodes().Select((n) => Vector3.Transform(n, transform)).ToArray());
+            return new Triangle3(GetNodes().Select((n) => Vector3.Transform(n, transform)).ToArray());
         }
-        public Triangle Rotate(Quaternion rotation)
+        public Triangle3 Rotate(Quaternion rotation)
         {
-            return new Triangle(
+            return new Triangle3(
                 Vector3.Transform( A, rotation), 
                 Vector3.Transform( B, rotation),
                 Vector3.Transform( C, rotation));
         }
-        public Triangle Rotate(Quaternion rotation, Vector3 pivot)
+        public Triangle3 Rotate(Quaternion rotation, Vector3 pivot)
         {
-            return new Triangle(
+            return new Triangle3(
                 pivot + Vector3.Transform( A - pivot, rotation), 
                 pivot + Vector3.Transform( B - pivot, rotation),
                 pivot + Vector3.Transform( C - pivot, rotation));
         }
-        public Triangle Reflect(Plane plane)
+        public Triangle3 Reflect(Plane plane)
             => Reflect(plane.Normal, -plane.Normal * plane.D);
-        public Triangle Reflect(Vector3 normal, Vector3 origin)
-            => new Triangle(
+        public Triangle3 Reflect(Vector3 normal, Vector3 origin)
+            => new Triangle3(
                 origin + Vector3.Reflect(A - origin, normal),
                 origin + Vector3.Reflect(B - origin, normal),
                 origin + Vector3.Reflect(C - origin, normal));
@@ -160,17 +161,25 @@ namespace JA.LinearAlgebra.Geometry
         #endregion
 
         #region Operators
-        public static Triangle operator +(Triangle triangle, Vector3 delta) => triangle.Offset(delta);
-        public static Triangle operator +(Vector3 delta, Triangle triangle) => triangle.Offset(delta);
-        public static Triangle operator -(Triangle triangle, Vector3 delta) => triangle.Offset(-delta);
-        public static Triangle operator -(Triangle triangle) => triangle.Scale(-1);
-        public static Triangle operator -(Vector3 delta, Triangle triangle) => triangle.Scale(-1f).Offset(delta);
+        public static Triangle3 operator +(Triangle3 triangle, Vector3 delta) => triangle.Offset(delta);
+        public static Triangle3 operator +(Vector3 delta, Triangle3 triangle) => triangle.Offset(delta);
+        public static Triangle3 operator -(Triangle3 triangle, Vector3 delta) => triangle.Offset(-delta);
+        public static Triangle3 operator -(Triangle3 triangle) => triangle.Scale(-1);
+        public static Triangle3 operator -(Vector3 delta, Triangle3 triangle) => triangle.Scale(-1f).Offset(delta);
 
-        public static Triangle operator *(float factor, Triangle triangle) => triangle.Scale(factor);
-        public static Triangle operator *(Triangle triangle, float factor) => triangle.Scale(factor);
-        public static Triangle operator /(Triangle triangle, float divisor) => triangle.Scale(1/divisor); 
+        public static Triangle3 operator *(float factor, Triangle3 triangle) => triangle.Scale(factor);
+        public static Triangle3 operator *(Triangle3 triangle, float factor) => triangle.Scale(factor);
+        public static Triangle3 operator /(Triangle3 triangle, float divisor) => triangle.Scale(1/divisor);
+
         #endregion
 
-
+        public Triangle3 ToConvertedFrom(UnitSystem units, UnitSystem target)
+        {
+            var f_len = Unit.Length.Convert(units, target);
+            return new Triangle3(
+                f_len * A,
+                f_len * B,
+                f_len * C);
+        }
     }
 }

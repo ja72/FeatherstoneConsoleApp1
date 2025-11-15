@@ -4,16 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Drawing;
 
 namespace JA
 {
     using JA.LinearAlgebra;
-    using JA.LinearAlgebra.VectorCalculus;
-    using JA.LinearAlgebra.ScrewCalculus;
 
-    using JA.Dynamics;
-    using JA.LinearAlgebra.Geometry;
-    using System.Drawing;
+    using Vector3 = JA.LinearAlgebra.Vectors.Vector3;
+    using Matrix3 = JA.LinearAlgebra.Vectors.Matrix3;
+
+    using Expr = JA.Symbolics.Expr;
+    using Mesh3 = JA.LinearAlgebra.Geometry.Mesh3;
+    using World = JA.Dynamics.World;
+    using Motor = JA.Dynamics.Motor;
+    using MassProperties = JA.Dynamics.MassProperties;
+    using MotorDefined = JA.Dynamics.MotorDefined;
 
     internal class Program
     {
@@ -180,7 +185,7 @@ namespace JA
             const string filePath = @"Models\LINK.STL";
 
             var origin = new System.Numerics.Vector3(0,0,10.5567f);
-            if (Mesh.ImportSTL(UnitSystem.MMGS, filePath, Color.AliceBlue, out var link, origin))
+            if (Mesh3.ImportSTL(UnitSystem.MMGS, filePath, Color.AliceBlue, out var link, origin))
             {
                 Console.WriteLine(link);
 

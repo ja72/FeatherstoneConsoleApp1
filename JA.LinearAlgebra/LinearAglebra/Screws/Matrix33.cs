@@ -3,10 +3,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-namespace JA.LinearAlgebra.ScrewCalculus
+namespace JA.LinearAlgebra.Screws
 {
-    using Vector3 = JA.LinearAlgebra.VectorCalculus.Vector3;
-    using Matrix3 = JA.LinearAlgebra.VectorCalculus.Matrix3;
+    using Vector3 = JA.LinearAlgebra.Vectors.Vector3;
+    using Matrix3 = JA.LinearAlgebra.Vectors.Matrix3;
 
     /// <summary>
     /// Immutable 2x2 block matrix where each block is a 3x3 Matrix3.

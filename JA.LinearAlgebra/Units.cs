@@ -148,8 +148,8 @@ namespace JA
         public static implicit operator Unit(UnitType type) => Base(type);
 
         #region Properties
-        public bool IsScalar { get => this is NoUnit || this is BaseUnit bu && bu.Type==UnitType.None; }
-        public bool IsBase { get => this is BaseUnit bu && bu.Type != UnitType.None; }
+        public bool IsScalar { get => this is NoUnit || (this is BaseUnit u_base && u_base.Type==UnitType.None); }
+        public bool IsBase { get => this is BaseUnit u_base && u_base.Type != UnitType.None; }
 
         public bool IsComplex(out float scale, out Unit[] parts)
         {

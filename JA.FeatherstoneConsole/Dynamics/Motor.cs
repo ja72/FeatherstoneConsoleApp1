@@ -2,8 +2,11 @@
 using System.Linq.Expressions;
 using System.Security.Cryptography;
 
+using JA.Symbolics;
+
 namespace JA.Dynamics
 {
+    using Expr = JA.Symbolics.Expr;
     public enum MotorDefined
     {
         Position,
@@ -67,9 +70,9 @@ namespace JA.Dynamics
 
         public MotorDefined Defined { get; }
         public Expr Drive { get; }
-        public Func<double, double, double, double> Compile()
+        public TertiaryFunc Compile()
         {
-            return (t,q,qp) => Drive[t,q,q];
+            return Drive.ToFunction(t, q, qp);
         }
         public override string ToString()
         {

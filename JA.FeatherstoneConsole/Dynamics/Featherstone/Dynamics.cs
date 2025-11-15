@@ -1,7 +1,7 @@
 ﻿using System;
 
-using JA.LinearAlgebra.ScrewCalculus;
-using JA.LinearAlgebra.VectorCalculus;
+using JA.LinearAlgebra.Screws;
+using JA.LinearAlgebra.Vectors;
 
 namespace JA.Dynamics.Featherstone
 {

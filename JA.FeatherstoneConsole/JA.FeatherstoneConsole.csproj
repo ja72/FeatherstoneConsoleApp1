@@ -108,8 +108,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dynamics\Experimental\Element.cs" />
     <Compile Include="Dynamics\Featherstone\Articulated.cs" />
-    <Compile Include="Dynamics\Element.cs" />
     <Compile Include="Dynamics\JointBodyInfo.cs" />
     <Compile Include="Dynamics\Featherstone\Kinematics.cs" />
     <Compile Include="Dynamics\Motor.cs" />

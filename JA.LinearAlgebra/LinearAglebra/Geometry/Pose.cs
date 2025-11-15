@@ -15,7 +15,7 @@ namespace JA.LinearAlgebra.Geometry
             Orientation=orientation;
         }
 
-        public static Pose Origin => new Pose(Vector3.Zero, Quaternion.Identity);
+        public static Pose Origin { get; } = new Pose(Vector3.Zero, Quaternion.Identity);
         public static implicit operator Pose(Vector3 position)=>new Pose(position, Quaternion.Identity);
         public static implicit operator Pose(Quaternion quaternion)=>new Pose(Vector3.Zero, quaternion);
         public static explicit operator Vector3(Pose pose)=>pose.Position;

@@ -2,10 +2,14 @@
 using System.ComponentModel;
 
 using JA.LinearAlgebra;
+using JA.LinearAlgebra.Screws;
 using JA.LinearAlgebra.Vectors;
 
 namespace JA.Dynamics.Featherstone
 {
+    using svec = Vector33;
+    using smat = Matrix33;
+
     public enum JointKnown
     {
         [Description("Joint Forcing is known, the inverse dynamics problem.")]
@@ -103,6 +107,19 @@ namespace JA.Dynamics.Featherstone
             kinematics.Calculate(this);
             articulated.Calculate(this, kinematics);
             dynamics.Calculate(this, kinematics, articulated);
+        }
+        public void DoFeatherstone(double time, StackedVector Y, out svec[] residualForces )
+        {
+            int dof = simulation.Dof;
+            this.time=time;
+            var joints = simulation.Joints;
+            Y[0].CopyTo(this.q, 0);
+            Y[1].CopyTo(this.qp, 0);
+            SetKnownConditions();
+            kinematics.Calculate(this);
+            articulated.Calculate(this, kinematics);
+            dynamics.Calculate(this, kinematics, articulated);
+            residualForces = dynamics.ResidualForces(this, kinematics);
         }
     }
 }

@@ -27,8 +27,9 @@ namespace JA
         {
             //TestStackedVector();
             //TestMotorDrive();
-            TestMeshObject();
-            TestSimulationTwo();
+            //TestMeshObject();
+            //TestSimulationTwo();
+            TestSimulationChain();
         }
 
         static void TestSimulationOne()
@@ -65,8 +66,8 @@ namespace JA
         static void TestSimulationTwo()
         {
             World sys = new World(UnitSystem.MKS, Vector3.Zero );
-            var steel = Material.Library(MaterialSpec.Steel);
-            var linkage = MassProperties.Box(
+            Material steel = Material.Library(MaterialSpec.Steel);
+            MassProperties linkage = MassProperties.Box(
                 steel.ToConverted(UnitSystem.CMKS),
                 30f,    // length in cm
                 2f,     // height in cm
@@ -85,7 +86,7 @@ namespace JA
             Console.WriteLine(j1);
             Console.WriteLine(j2);
 
-            var sim = sys.ToSimulation();
+            Dynamics.Simulation sim = sys.ToSimulation();
             Console.WriteLine(sim);
 
             sim.RunTo(1.0, 20);
@@ -95,8 +96,37 @@ namespace JA
             {
                 var q = $"({item.Y[0].ToStringList(6)})";
                 var qp = $"({item.Y[1].ToStringList(6)})";
-                Console.WriteLine($"{item.t,8} {q,16} {qp,16}");
+                Console.WriteLine($"{item.t,8:f6} {q,16} {qp,16}");
             }
+        }
+
+        static void TestSimulationChain()
+        {
+            Material steel = Material.Library(MaterialSpec.Steel);
+            const float length = 30f;
+            MassProperties linkage = MassProperties.Box(
+                steel.ToConverted(UnitSystem.CMKS),
+                length,  // length in cm
+                2f,     // height in cm
+                2.111f  // thickness in cm
+                ).WithMass(1);
+            var world = World.BuildSerialChain(6, length/2, linkage);
+            Console.WriteLine(world);
+
+            Dynamics.Simulation sim = world.ToSimulation();
+            Console.WriteLine(sim);
+
+            sim.RunTo(1.0, 20, out var max_residual_force);
+            const int colwt = 46;
+            Console.WriteLine($"{"Time",6} {"(q)",colwt} {"(qp)",colwt}");
+            var history = sim.History;
+            foreach (var item in history)
+            {
+                var q =  $"({item.Y[0].ToStringList(4)})";
+                var qp = $"({item.Y[1].ToStringList(4)})";
+                Console.WriteLine($"{item.t,6:f4} {q,colwt} {qp,colwt}");
+            }
+            Console.WriteLine($"max_residual_force = {max_residual_force}");
         }
 
         static void TestStackedVector()

@@ -6,10 +6,10 @@ using static System.Math;
 
 //using Vector4 = System.Numerics.Vector4;
 
-namespace JA.LinearAglebra.Geometry.Homogeneous
+namespace JA.LinearAlgebra.Geometry.Homogeneous
 {
-    using Vector3 = LinearAlgebra.Vectors.Vector3;
-    using Quaternion3 = LinearAlgebra.Vectors.Quaternion3;
+    using Vector3 = Vectors.Vector3;
+    using Quaternion3 = Vectors.Quaternion3;
     public readonly struct Point3 : IEquatable<Point3>
     {
         private readonly (Vector3 position, double w) data;

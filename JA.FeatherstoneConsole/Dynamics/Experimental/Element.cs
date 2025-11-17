@@ -115,12 +115,12 @@ namespace JA.Dynamics.Experimental
             #region Factory
             public Link(Pose3 localStep, MassProperties massProperties) : base()
             {
-                this.LocalStep=localStep.ToConverted(Units);
+                this.LocalStep=localStep;
                 this.MassProperties=massProperties.ToConverted(Units);
             }
             public Link(Element parent, Pose3 localStep, MassProperties massProperties) : base(parent)
             {
-                this.LocalStep=localStep.ToConverted(Units);
+                this.LocalStep=localStep;
                 this.MassProperties=massProperties.ToConverted(Units);
             } 
             #endregion
@@ -134,7 +134,7 @@ namespace JA.Dynamics.Experimental
             #region Units
             public override void DoConvert(UnitSystem target)
             {
-                LocalStep=LocalStep.ToConverted(target);
+                LocalStep=LocalStep.ToConvertedFrom(Units, target);
                 MassProperties=MassProperties.ToConverted(target);
                 base.DoConvert(target);
             } 

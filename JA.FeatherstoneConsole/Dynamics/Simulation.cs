@@ -96,11 +96,18 @@ namespace JA.Dynamics
             var sol = RungeKutta(Time, Current, step);
             AddSolution(sol);
         }
+        public void Integrate(double step, out double f_res_max)
+        {
+            var sol = RungeKutta(Time, Current, step);
+            AddSolution(sol);
+            var f_res = GetResidualForces(sol.t, sol.Y);
+            f_res_max = f_res.Max(f => f.MaxAbs());
+        }
         public void RunTo(double endTime, int steps)
             => RunTo(endTime, ( endTime-Time )/steps);
         public void RunTo(double endTime, double step)
         {
-            double t = Time;
+            double t = Time;            
             while (t<endTime)
             {
                 if (t+step>endTime)
@@ -108,6 +115,23 @@ namespace JA.Dynamics
                     step=endTime-t;
                 }
                 Integrate(step);
+                t+=step;
+            }
+        }
+        public void RunTo(double endTime, int steps, out double max_residual_force)
+            => RunTo(endTime, ( endTime-Time )/steps, out max_residual_force);
+        public void RunTo(double endTime, double step, out double max_residual_force)
+        {
+            double t = Time;
+            max_residual_force = 0;
+            while (t<endTime)
+            {
+                if (t+step>endTime)
+                {
+                    step=endTime-t;
+                }
+                Integrate(step, out var f_res_max);
+                max_residual_force = Math.Max(max_residual_force, f_res_max);
                 t+=step;
             }
         }
@@ -134,6 +158,12 @@ namespace JA.Dynamics
             var ΔY = (step/6) * (K0 + 2*K1 + 2*K2 + K3);
 
             return (t+step, Y+ΔY);
+        }
+
+        public Vector33[] GetResidualForces(double time, StackedVector Y)
+        {
+            state.DoFeatherstone(time, Y, out var f_res);
+            return f_res;
         }
         #endregion
 

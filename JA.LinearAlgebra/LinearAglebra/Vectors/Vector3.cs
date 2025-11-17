@@ -278,6 +278,7 @@ namespace JA.LinearAlgebra.Vectors
         #region Collection
         public static implicit operator double[](Vector3 vector) => vector.ToArray();
         public double[] ToArray() => new[] { x, y, z };
+        internal double MaxAbs() => Max(Abs(x), Max(Abs(y), Abs(z) ));
         #endregion
     }
 }

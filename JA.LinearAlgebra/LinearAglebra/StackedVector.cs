@@ -156,11 +156,11 @@ namespace JA.LinearAlgebra
             {
                 throw new ArgumentException("Incompatible Partitions.", nameof(B));
             }
-            return LinearAlgebra.VectorDot(A.elements, B.elements);
+            return NativeArrays.VectorDot(A.elements, B.elements);
         }
         public static StackedMatrix Outer(StackedVector A, StackedVector B)
         {
-            var values = LinearAlgebra.VectorOuterArray2(A.elements, B.elements);
+            var values = NativeArrays.VectorOuterArray2(A.elements, B.elements);
 
             return new StackedMatrix(A.partitions, B.partitions, values);
         }

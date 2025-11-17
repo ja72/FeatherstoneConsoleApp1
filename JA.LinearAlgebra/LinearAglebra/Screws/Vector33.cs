@@ -159,6 +159,7 @@ namespace JA.LinearAlgebra.Screws
         #region Collection
         public static implicit operator double[](Vector33 @this) => @this.ToArray();
         public double[] ToArray() => new double[] { linear.x, linear.y, linear.z, angular.x, angular.y, angular.z };
+        public double MaxAbs() => Max(linear.MaxAbs(), angular.MaxAbs());
         #endregion
     }
 }

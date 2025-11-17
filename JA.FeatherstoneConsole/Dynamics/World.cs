@@ -135,6 +135,30 @@ namespace JA.Dynamics
             });
             return list.ToArray();
         }
+        public static World BuildSerialChain(int count, double deltaDistance, MassProperties massProperties)
+            => BuildSerialChain(massProperties.Units, count, deltaDistance, massProperties);
+        public static World BuildSerialChain(UnitSystem unit, int count, double deltaDistance, MassProperties massProperties)
+        {
+            var gravity = new Vector3(0, -unit.EarthGravity(),0);
+            var world = new World(unit, gravity);
+            JointBody parent = null;
+            for (int i = 0; i < count; i++)
+            {
+                JointBody joint;
+                if ( parent == null)
+                {
+                    joint = world.NewRevolute(Pose3.Origin, Vector3.UnitZ);
+                }
+                else
+                {
+                    joint = parent.AddRevolute(Pose3.Translation(deltaDistance, 0, 0), Vector3.UnitZ);
+                }
+
+                joint.AddMassProperties(massProperties);
+                parent = joint;
+            }
+            return world;
+        }
 
         #endregion
 
@@ -145,6 +169,13 @@ namespace JA.Dynamics
         }
 
 
+        #endregion
+
+        #region Formatting
+        public override string ToString()
+        {
+            return $"World(Units={Units}, Gravity={Gravity}, RootJoints={RootJoints.Count})";
+        }
         #endregion
     }
 

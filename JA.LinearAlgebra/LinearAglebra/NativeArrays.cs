@@ -10,7 +10,7 @@ using static System.Math;
 
 namespace JA.LinearAlgebra
 {
-    public static class LinearAlgebra
+    public static class NativeArrays
     {
         #region Double Vectors
         public static double MaxElement(this double[] vector, out int index)

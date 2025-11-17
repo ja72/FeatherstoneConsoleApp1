@@ -62,8 +62,8 @@ namespace JA.Dynamics
             this.localAxis=localAxis;
             this.pitch=pitch;
             this.massProperties = massProperties.ToConverted(units);
-            this.InitialConditions=(0, 0);
-            this.Motor=Motor.ConstForcing(0);
+            this.initialConditions=(0, 0);
+            this.motor=Motor.ConstForcing(0);
         }
 
         #region Properties
@@ -111,11 +111,11 @@ namespace JA.Dynamics
         #region Mass Properties
         public void AddMassProperties(MassProperties additionalMassProperties)
         {
-            MassProperties+=additionalMassProperties.ToConverted(units);
+            massProperties+=additionalMassProperties.ToConverted(units);
         }
         public void SubMassProperties(MassProperties additionalMassProperties)
         {
-            MassProperties-=additionalMassProperties.ToConverted(units);
+            massProperties-=additionalMassProperties.ToConverted(units);
         }
         public void ZeroMassProperties() => MassProperties=MassProperties.Zero; 
         #endregion
@@ -153,19 +153,17 @@ namespace JA.Dynamics
                 {
                     stepPos=Vector3.Scale(localAxis*pitch, q);
                     stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return localPosition+Pose3.At(stepPos, stepOri);
+                    return localPosition.TranslateRotate(stepPos, stepOri);
                 }
                 case JointType.Revolute:
                 {
-                    stepPos=Vector3.Zero;
                     stepOri=Quaternion3.FromAxisAngle(localAxis, q);
-                    return localPosition+Pose3.At(stepPos, stepOri);
+                    return localPosition.Rotate(stepOri);
                 }
                 case JointType.Prismatic:
                 {
                     stepPos=Vector3.Scale(localAxis, q);
-                    stepOri=Quaternion3.Identity;
-                    return localPosition+Pose3.At(stepPos, stepOri);
+                    return localPosition.Translate(stepPos);
                 }
                 default:
                 throw new NotSupportedException("Unknown joint type.");
@@ -180,7 +178,7 @@ namespace JA.Dynamics
         {
             var fl = Unit.Length.Convert(Units, target);
             var newpitch= pitch * fl;
-            var newlocalPosition=localPosition.ToConverted(target);
+            var newlocalPosition=localPosition.ToConvertedFrom(units, target);
             var newMassProperties=MassProperties.ToConverted(target);
             var newUnits=target;
 
@@ -195,7 +193,7 @@ namespace JA.Dynamics
 
             var fl = Unit.Length.Convert(Units, target);
             this.pitch*=fl;
-            this.localPosition=localPosition.ToConverted(target);
+            this.localPosition=localPosition.ToConvertedFrom(units, target);
             this.MassProperties=this.MassProperties.ToConverted(target);
             this.Units=target;            
         }

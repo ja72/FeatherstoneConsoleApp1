@@ -255,7 +255,7 @@ namespace JA.LinearAlgebra
             if (MatrixDecompose(matrix, out double[][] lum, out int[] perm, out _))
             {
                 var result = SystemSolve(lum, perm, b, out x);
-                var residual = LinearAlgebra.VectorAdd(matrix.MatrixProduct(x), b, -1.0);
+                var residual = NativeArrays.VectorAdd(matrix.MatrixProduct(x), b, -1.0);
                 maxResidual=residual.MaxAbsElement(out _);
                 return result;
             }
@@ -290,7 +290,7 @@ namespace JA.LinearAlgebra
             if (MatrixDecompose(matrix, out double[][] lum, out int[] perm, out _))
             {
                 var result = SystemSolve(lum, perm, B, out X);
-                var residual = LinearAlgebra.MatrixAdd(matrix.MatrixProduct(X), B, -1.0);
+                var residual = NativeArrays.MatrixAdd(matrix.MatrixProduct(X), B, -1.0);
                 maxResidual=residual.MaxAbsElement(out _, out _);
                 return result;
             }

@@ -106,7 +106,7 @@ namespace JA
         public static string Show(this Matrix values, string title = "", string format = "g4")
             => Show(values.ToJaggedArray(), title, format);
         public static string Show(this double[,] values, string title = "", string format = "g4")
-            => Show(Factory.ToJaggedArray(values), title, format);
+            => Show(NativeArrays.ToJaggedArray(values), title, format);
         public static string Show(this double[][] values, string title = "", string format = "g4")
         {
             int n = values.Length;
@@ -242,7 +242,7 @@ namespace JA
             }
             string[][] show = new string[rows][];
 
-            LinearAlgebra.Factory.JaggedTranspose(parts, ref show, string.Empty);
+            NativeArrays.JaggedTranspose(parts, ref show, string.Empty);
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i<show.Length; i++)

@@ -125,7 +125,7 @@ namespace JA.LinearAlgebra
             {
                 throw new ArgumentException("Incompatible partitions.:", nameof(B));
             }
-            var values = NativeArrays.MatrixProduct(A.elements, B.Elements);
+            var values = NativeArrays.Array2Product(A.elements, B.Elements);
             return new StackedVector(A.rowPartitions, values);
         }
         public StackedVector Solve(StackedVector B, out double maxResidual)

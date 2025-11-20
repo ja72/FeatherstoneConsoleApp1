@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace JA.LinearAlgebra
 {
+    using static JA.LinearAlgebra.NativeArrays;
     public class Matrix : IEquatable<Matrix>
     {
         readonly int rows, cols;
@@ -167,7 +168,6 @@ namespace JA.LinearAlgebra
         }
         #endregion
 
-
         #region Operators
         public static Matrix operator ~(Matrix A)
         {
@@ -175,39 +175,38 @@ namespace JA.LinearAlgebra
         }
         public static Matrix operator +(Matrix A, Matrix B)
         {
-            return new Matrix(A.elements.MatrixAdd(B.elements, 1));
+            return new Matrix(A.elements.JaggedAdd(B.elements, 1));
         }
         public static Matrix operator -(Matrix A)
         {
-            return new Matrix(A.elements.MatrixScale(-1));
+            return new Matrix(A.elements.JaggedScale(-1));
         }
         public static Matrix operator -(Matrix A, Matrix B)
         {
-            return new Matrix(A.elements.MatrixAdd(B.elements, -1));
+            return new Matrix(A.elements.JaggedAdd(B.elements, -1));
         }
         public static Matrix operator *(double factor, Matrix B)
         {
-            return new Matrix(B.elements.MatrixScale(factor));
+            return new Matrix(B.elements.JaggedScale(factor));
         }
         public static Matrix operator *(Matrix A, double factor)
         {
-            return new Matrix(A.elements.MatrixScale(factor));
+            return new Matrix(A.elements.JaggedScale(factor));
         }
         public static Matrix operator /(Matrix A, double divisor)
         {
-            return new Matrix(A.elements.MatrixScale(1/divisor));
+            return new Matrix(A.elements.JaggedScale(1/divisor));
         }
         public static Vector operator *(Matrix A, Vector v)
         {
-            return new Vector(A.elements.MatrixProduct(v.Elements));
+            return new Vector(A.elements.JaggedProduct(v.Elements));
         }
         public static Matrix operator *(Matrix A, Matrix B)
         {
-            return new Matrix(A.elements.MatrixProduct(B.elements));
+            return new Matrix(A.elements.JaggedProduct(B.elements));
         }
 
         #endregion
-
 
         #region IEquatable Members
 
@@ -232,17 +231,15 @@ namespace JA.LinearAlgebra
         /// <returns>True if equal</returns>
         public bool Equals(Matrix other)
         {
-            return elements.MatrixEquals(other.elements);
+            return NativeArrays.JaggedEquals(elements, other.elements);
         }
 
         /// <summary>
         /// Calculates the hash code for the vector
         /// </summary>
         /// <returns>The int hash value</returns>
-        public override int GetHashCode()
-        {
-            return elements.Aggregate(17, (hash,val) => hash * 23 + val.GetHashCode());
-        }
+        public override int GetHashCode() 
+            => elements.Aggregate(17, (hash, val) => HashCode.Combine(hash, val.GetHashCode()));
 
         #endregion
     }

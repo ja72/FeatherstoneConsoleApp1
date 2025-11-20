@@ -237,12 +237,12 @@ namespace JA
                 Console.WriteLine(cg_expect.ToArray().Show("expect=","f4"));
                 Console.WriteLine(cg_actual.ToArray().Show("actual=","f4"));
                 Console.WriteLine((cg_actual-cg_expect).ToArray().Show("diff=","f4"));
-                Console.WriteLine($"max delta = { ((cg_actual-cg_expect).ToArray().MaxAbsElement(out _) / cg_expect.ToArray().MaxAbsElement(out _)):p2}");
+                Console.WriteLine($"max delta = { ((cg_actual-cg_expect).ToArray().FindMaxAbs(out _) / cg_expect.ToArray().FindMaxAbs(out _)):p2}");
                 Console.WriteLine($"MMOI:");
                 Console.WriteLine(mmoi_expect.ToArray2().Show("expect=","f4"));
                 Console.WriteLine(mmoi_actual.ToArray2().Show("actual=","f4"));
                 Console.WriteLine((mmoi_actual-mmoi_expect).ToArray2().Show("diff=","f4"));
-                Console.WriteLine($"max delta = { ((mmoi_actual-mmoi_expect).ToArray().MaxAbsElement(out _) / mmoi_expect.ToArray().MaxAbsElement(out _)):p2}");
+                Console.WriteLine($"max delta = { ((mmoi_actual-mmoi_expect).ToArray().FindMaxAbs(out _) / mmoi_expect.ToArray().FindMaxAbs(out _)):p2}");
             }
             else
             {

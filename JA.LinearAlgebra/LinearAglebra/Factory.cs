@@ -46,53 +46,35 @@ namespace JA.LinearAlgebra
         #endregion
 
         #region Generic Array2
-        public static T[][] CreateArray2<T>(int rows, int cols)
+        public static T[,] CreateArray2<T>(int rows, int cols)
         {
-            var matrix=new T[rows][];
-            for (int i = 0; i<rows; i++)
-            {
-                matrix[i]=new T[cols];
-            }
-            return matrix;
+            return new T[rows, cols];
         }
-        public static T[][] CreateArray2<T>(int rows, int cols, params T[] elements)
+        public static T[,] CreateArray2<T>(int rows, int cols, T fill)
         {
-            var matrix=new T[rows][];
+            var result = new T[rows, cols];
+            var elements = Enumerable.Repeat(fill, rows * cols).ToArray();
+            Array.Copy(elements, result, elements.Length);
+            return result;
+        }
+
+        public static T[,] CreateArray2<T>(int rows, int cols, params T[] elements)
+        {
+            var result=new T[rows, cols];
+            Array.Copy(elements, result, elements.Length);
+            return result;
+        }
+        public static T[,] CreateArray2<T>(int rows, int cols, Func<int, int, T> init)
+        {
+            var result=new T[rows, cols];
             for (int i = 0, k = 0; i<rows; i++, k+=cols)
             {
-                var row =new T[cols];
-                Array.Copy(elements, k, row, 0, cols);
-                matrix[i]=row;
-            }
-            return matrix;
-        }
-        public static T[][] CreateArray2<T>(int rows, int cols, Func<T> init)
-        {
-            var matrix=new T[rows][];
-            for (int i = 0, k = 0; i<rows; i++, k+=cols)
-            {
-                var row=new T[cols];
                 for (int j = 0; j<cols; j++)
                 {
-                    row[j]=init();
+                    result[i, j]=init(i,j);
                 }
-                matrix[i]=row;
             }
-            return matrix;
-        }
-        public static T[][] CreateArray2<T>(int rows, int cols, Func<int, int, T> init)
-        {
-            var matrix=new T[rows][];
-            for (int i = 0, k = 0; i<rows; i++, k+=cols)
-            {
-                var row=new T[cols];
-                for (int j = 0; j<cols; j++)
-                {
-                    row[j]=init(i, j);
-                }
-                matrix[i]=row;
-            }
-            return matrix;
+            return result;
         }
 
         #endregion
@@ -136,40 +118,6 @@ namespace JA.LinearAlgebra
             return matrix;
         }
 
-        public static bool JaggedTranspose<T>(this T[][] matrix, ref T[][] t_matrix, T empty  =default(T))
-        {
-            int n=matrix.Length;
-            int m = matrix.Max(u=> u.Length);
-            if (t_matrix.Length!=m)
-            {
-                return false;
-            }
-            for(int i=0; i<m; i++)
-            {
-                var row=new T[n];
-                for(int j=0; j<n; j++)
-                {
-                    if (i<matrix[j].Length)
-                    {
-                        row[j]=matrix[j][i];
-                    }
-                    else
-                    {
-                        row[j]=empty;
-                    }
-                }
-                t_matrix[i]=row;
-            }
-            return true;
-        }
-        public static T[][] JaggedTranspose<T>(this T[][] matrix)
-        {
-            int n=matrix.Length;
-            int m = matrix.Max(u=> u.Length);
-            T[][] t_matrix = Factory.CreateJaggedArray<T>(m,n);
-            JaggedTranspose(matrix,ref t_matrix);
-            return t_matrix;
-        }
 
         #endregion
 
@@ -256,18 +204,6 @@ namespace JA.LinearAlgebra
         #endregion
 
         #region Jagged Double Matrix
-        public static double[][] CopyJaggedMatrix(this double[][] matrix)
-        {
-            int rows = matrix.Length;
-            int cols = rows > 0 ?  matrix[0].Length : 0;
-            double[][] result = new double[rows][];
-            for (int i = 0; i<rows; i++)
-            {
-                result[i]=new double[cols];
-                Array.Copy(matrix[i], result[i], cols);
-            }
-            return result;
-        }
 
         public static double[][] CreateJaggedArray(int rows, int cols)
         {
@@ -401,186 +337,6 @@ namespace JA.LinearAlgebra
             var data = CreateRandomVector(rows*cols, min_value, max_value);
             return data.ToArray2(rows, cols);
         }
-        #endregion
-
-        #region Conversions
-        public static T[] Slice<T>(this T[] array, int offset, int size)
-        {
-            T[] result = new T[size];
-            Array.Copy(array, offset, result, 0, size);
-            return result;
-        }
-        public static void Inject<T>(this T[] array, int offset, T[] values)
-        {
-            int size = Math.Min(values.Length, array.Length-offset);
-            Array.Copy(values,0, array, offset, size);
-        }
-        public static double[] GetRow(this double[,] matrix, int row)
-        {
-            const int sz = sizeof(double);
-            int cols = matrix.GetLength(1);
-            double[] result = new double[cols];
-            int offset = row*cols;
-            Buffer.BlockCopy(matrix, offset*sz, result, 0, cols*sz);
-            return result;
-        }
-        public static double[] GetRowSlice(this double[,] matrix, int row, int colOffset, int colSize)
-        {
-            const int sz = sizeof(double);
-            int cols = matrix.GetLength(1);
-            double[] result = new double[cols];
-            int offset = row*cols + colOffset;
-            Buffer.BlockCopy(matrix, offset*sz, result, 0, colSize*sz);
-            return result;
-        }
-        public static void SetRow(this double[,] matrix, int row, double[] values)
-        {
-            const int sz = sizeof(double);
-            int cols = matrix.GetLength(1);
-            int offset = row*cols;
-            cols=Math.Min(cols, values.Length);
-            Buffer.BlockCopy(values,0, matrix, offset*sz, cols*sz);
-        }
-        public static void SetRowSlice(this double[,] matrix, int rowOffset, int colOffset, double[] values)
-        {
-            const int sz = sizeof(double);
-            int cols = matrix.GetLength(1);
-            int offset = rowOffset*cols + colOffset;
-            cols=Math.Min(cols, values.Length);
-            Buffer.BlockCopy(values,0, matrix, offset*sz, cols*sz);
-        }
-        public static double[] GetColumn(this double[,] matrix, int col)
-        {
-            int rows = matrix.GetLength(0);
-            double[] result = new double[rows];
-            for (int i = 0; i<rows; i++)
-            {
-                result[i]=matrix[i, col];
-            }
-            return result;
-        }
-        public static void SetColumn(this double[,] matrix, int col, double[] values)
-        {
-            int rows = Math.Min(matrix.GetLength(0), values.Length);
-            for (int i = 0; i<rows; i++)
-            {
-                matrix[i, col] = values[i];
-            }
-        }
-        public static double[] ToArray(this double[,] matrix)
-        {
-            double[] flat = new double[matrix.Length];
-            Buffer.BlockCopy(matrix, 0, flat, 0, Buffer.ByteLength(matrix));
-            return flat;
-        }
-        public static double[] ToArray(this double[][] jagged)
-        {
-            const int sz = sizeof(double);
-            int rows = jagged.Length;
-            int cols = rows>0 ? jagged[0].Length : 0;
-            double[] flat = new double[rows*cols];
-            int offset = 0;
-            for (int i = 0; i<rows; i++)
-            {
-                Buffer.BlockCopy(jagged[i], 0, flat, offset*sz , Buffer.ByteLength(jagged[i]));
-                offset+=cols;
-            }
-            return flat;
-        }
-        public static double[,] ToArray2(this double[] elements, int rows, int cols)
-        {
-            const int sz = sizeof(double);
-            double[,] result = new double[rows, cols];
-            int offset = 0;
-            for (int i = 0; i<rows; i++)
-            {
-                Buffer.BlockCopy(
-                    elements, offset*sz,
-                    result, offset*sz,
-                    cols*sz );
-                offset+=cols;
-            }
-            return result;
-        }
-        public static double[,] ToArray2(this double[][] jagged)
-        {
-            const int sz = sizeof(double);
-            int rows = jagged.Length;
-            int cols = rows>0 ? jagged[0].Length : 0;
-            double[,] result = new double[rows, cols];
-            int offset = 0;
-            for (int i = 0; i<rows; i++)
-            {
-                Buffer.BlockCopy(
-                    jagged[i], 0,
-                    result, offset*sz,
-                    cols*sz );
-                offset+=cols;
-            }
-            return result;
-        }
-        public static double[][] ToJaggedArray(this double[] elements, int rows, int cols)
-        {
-            const int sz = sizeof(double);
-            double[][] result = new double[rows][];
-            int offset = 0;
-            for (int i = 0; i<rows; i++)
-            {
-                double[] temp = new double[cols];
-                Buffer.BlockCopy(
-                    elements, offset*sz,
-                    temp, 0,
-                    cols*sz );
-                result[i]=temp;
-                offset+=cols;
-            }
-            return result;
-        }
-        public static double[][] ToJaggedArray(this double[,] matrix)
-        {
-            const int sz = sizeof(double);
-            int rows = matrix.GetLength(0);
-            int cols = matrix.GetLength(1);
-            double[][] result = new double[rows][];
-            int offset = 0;
-            for (int i = 0; i<rows; i++)
-            {
-                double[] temp = new double[cols];
-                Buffer.BlockCopy(
-                    matrix, offset*sz,
-                    temp, 0,
-                    cols*sz );
-                result[i]=temp;
-                offset+=cols;
-            }
-            return result;
-        }
-
-        static bool MatrixTranspose<T>(this T[][] matrix, ref T[][] t_matrix)
-        {
-            int n=matrix.Length;
-            int m=matrix[0].Length;
-            if(t_matrix.Length!=m) return false;
-            for(int i=0; i<m; i++)
-            {
-                var row=new T[n];
-                for(int j=0; j<n; j++)
-                {
-                    row[j]=matrix[j][i];
-                }
-                t_matrix[i]=row;
-            }
-            return true;
-        }
-        public static T[][] MatrixTranspose<T>(this T[][] matrix)
-        {
-            int n=matrix.Length;
-            int m=matrix[0].Length;
-            T[][] t_matrix = Factory.CreateJaggedArray<T>(m,n);
-            MatrixTranspose(matrix,ref t_matrix);
-            return t_matrix;
-        }
-
         #endregion
 
     }

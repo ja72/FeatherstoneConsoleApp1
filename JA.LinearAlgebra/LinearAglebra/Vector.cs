@@ -9,6 +9,8 @@ using System.Text;
 
 namespace JA.LinearAlgebra
 {
+    using static JA.LinearAlgebra.NativeArrays;
+
     public class Vector : IEquatable<Vector>, ICloneable
     {
         readonly int size;
@@ -18,8 +20,15 @@ namespace JA.LinearAlgebra
         public static readonly Vector Empty=new Vector(0);
         public Vector(int size)
         {
-            this.elements=new double[size];
             this.size=size;
+            if (size==0)
+            {
+                this.elements = Array.Empty<double>();
+            }
+            else
+            {
+                this.elements=new double[size];
+            }
         }
         public Vector(int size, IEnumerable<double> collection) : this(size)
         {
@@ -64,7 +73,8 @@ namespace JA.LinearAlgebra
         public static Vector FillStartEnd(int count, double first_value, double last_value)
         {
             double[] result=new double[count];
-            result.FillSeries(first_value, first_value + last_value * (count-1));
+            double step = (last_value-first_value)/(count-1);
+            result.FillSeries(first_value, step);
             return new Vector(result);
         }
         public static Vector FillStartStep(int count, double first_value, double step_value)
@@ -92,7 +102,7 @@ namespace JA.LinearAlgebra
         }
 
         public Vector Slice(int offset, int size) => new Vector(elements.Slice(offset, size));
-        public void Inject(int offset, Vector values) => elements.Inject(offset, values.elements);
+        public void Inject(int offset, Vector values) => NativeArrays.Inject(elements, offset, values.elements);
         public override string ToString()
         {
             return $"[{string.Join(",", elements)}]";
@@ -104,40 +114,36 @@ namespace JA.LinearAlgebra
 
         public static Vector operator+(Vector v, Vector u)
         {
-            return new Vector( v.elements.VectorAdd(u.elements));
+            return new Vector( NativeArrays.ArrayAdd(v.elements, u.elements));
         }
         public static Vector operator-(Vector v)
         {
-            return new Vector( v.elements.VectrorScale(-1));
+            return new Vector( NativeArrays.ArrayScale(v.elements, -1));
         }
         public static Vector operator-(Vector v, Vector u)
         {
-            return new Vector( v.elements.VectorAdd(u.elements, -1));
+            return new Vector( NativeArrays.ArrayAdd(v.elements, u.elements, -1));
         }
         public static Vector operator*(double factor, Vector v)
         {
-            return new Vector(v.elements.VectrorScale(factor));
+            return new Vector(NativeArrays.ArrayScale(v.elements, factor));
         }
         public static Vector operator*(Vector v, double factor)
         {
-            return new Vector( v.elements.VectrorScale(factor));
+            return new Vector( NativeArrays.ArrayScale(v.elements, factor));
         }
         public static Vector operator/(Vector v, double divisor)
         {
-            return  new Vector( v.elements.VectrorScale(1/divisor));
+            return  new Vector( NativeArrays.ArrayScale(v.elements, 1/divisor));
         }
-        public static Vector operator/(Vector v, Vector u)
-        {
-            return new Vector( v.elements.VectorDivide(u.elements));
-        }
-        public double Dot(Vector other) { return elements.VectorDot(other.elements); }
-        public Matrix Outer(Vector other) { return new Matrix( elements.VectorOuterJagged(other.elements)); }
-        public double Sum() { return elements.VectorElementSum(); }
-        public double Norm2() { return elements.VectorNorm2(); }
-        public double Norm1() { return elements.VectorNorm1(); }
-        public double NormP(double p) { return elements.VectorNormP(p); }
-        public double NormInf() { return elements.VectorNormInf(); }
-        public double SumSquares() { return elements.VectorDot(elements); } 
+        public static double Dot(Vector vector, Vector other) => NativeArrays.ArrayDot(vector.elements, other.elements);
+        public static Matrix Outer(Vector vector, Vector other) => new Matrix(NativeArrays.JaggedOuter(vector.elements, other.elements));
+        public double Sum() => NativeArrays.ArraySum(elements);
+        public double Norm2() => NativeArrays.ArrayNorm2(elements);
+        public double Norm1() => NativeArrays.ArrayNorm1(elements);
+        public double NormP(double p) => NativeArrays.ArrayNormP(elements, p);
+        public double NormInf() => NativeArrays.ArrayNormInf(elements);
+        public double SumSquares() => NativeArrays.ArrayDot(elements, elements);
         #endregion
 
         #region IEquatable Members
@@ -163,17 +169,15 @@ namespace JA.LinearAlgebra
         /// <returns>True if equal</returns>
         public bool Equals(Vector other)
         {
-            return elements.VectorEquals(other.elements);
+            return NativeArrays.ArrayEquals(elements, other.elements);
         }
 
         /// <summary>
         /// Calculates the hash code for the vector
         /// </summary>
         /// <returns>The int hash value</returns>
-        public override int GetHashCode()
-        {
-            return elements.Aggregate(17, (hash, val) => hash * 23 + val.GetHashCode());
-        }
+        public override int GetHashCode() 
+            => elements.Aggregate(17, (hash, val) => HashCode.Combine(hash, val.GetHashCode()));
 
         #endregion
 

@@ -18,7 +18,7 @@ namespace JA.LinearAlgebra
     {
         public const double ZERO_TOL = 1e-12;
 
-        public static double[][] CopyMatrix(this double[][] matrix)
+        static double[][] CopyJaggedMatrix(this double[][] matrix)
         {
             int rows = matrix.Length;
             int cols = rows > 0 ?  matrix[0].Length : 0;
@@ -37,7 +37,7 @@ namespace JA.LinearAlgebra
             // Doolittle LUP decomposition.
             // assumes matrix is square.
             int n = matrix.Length; // convenience
-            lu = Factory.CopyJaggedMatrix(matrix);
+            lu = CopyJaggedMatrix(matrix);
             perm=Enumerable.Range(0, n).ToArray();
             toggle=1;
             for (int j = 0; j<n-1; ++j) // each column
@@ -184,7 +184,7 @@ namespace JA.LinearAlgebra
         {
             if (!MatrixDecompose(matrix, out double[][] lu, out int[] perm, out _))
             {
-                inverse=Factory.CopyJaggedMatrix(matrix);
+                inverse=CopyJaggedMatrix(matrix);
                 return false;
             }
             return LuInverse(lu, perm, out inverse);
@@ -255,8 +255,8 @@ namespace JA.LinearAlgebra
             if (MatrixDecompose(matrix, out double[][] lum, out int[] perm, out _))
             {
                 var result = SystemSolve(lum, perm, b, out x);
-                var residual = NativeArrays.VectorAdd(matrix.MatrixProduct(x), b, -1.0);
-                maxResidual=residual.MaxAbsElement(out _);
+                var residual = NativeArrays.ArrayAdd(matrix.JaggedProduct(x), b, -1.0);
+                maxResidual=residual.FindMaxAbs(out _);
                 return result;
             }
             x=Array.Empty<double>();
@@ -290,8 +290,8 @@ namespace JA.LinearAlgebra
             if (MatrixDecompose(matrix, out double[][] lum, out int[] perm, out _))
             {
                 var result = SystemSolve(lum, perm, B, out X);
-                var residual = NativeArrays.MatrixAdd(matrix.MatrixProduct(X), B, -1.0);
-                maxResidual=residual.MaxAbsElement(out _, out _);
+                var residual = NativeArrays.JaggedAdd(matrix.JaggedProduct(X), B, -1.0);
+                maxResidual=residual.FindMaxAbs(out _, out _);
                 return result;
             }
             X=Array.Empty<double[]>();
@@ -357,25 +357,25 @@ namespace JA.LinearAlgebra
             {
                 if (x_known.Length==N) x=x_known;
                 if (y_known.Length==N) y=y_known;
-                var PT=P.JaggedTranspose();
-                var RT=R.JaggedTranspose();
-                x_known=PT.MatrixProduct(x);
-                y_known=RT.MatrixProduct(y);
-                var Axb=A.MatrixProduct(x).VectorAdd(b);
-                var rhs=y_known.VectorAdd(RT.MatrixProduct(Axb), -1);
-                var J=RT.MatrixProduct(A.MatrixProduct(R));
+                var PT=NativeArrays.JaggedTranspose(P);
+                var RT=NativeArrays.JaggedTranspose(R);
+                x_known=PT.JaggedProduct(x);
+                y_known=RT.JaggedProduct(y);
+                var Axb=A.JaggedProduct(x).ArrayAdd(b);
+                var rhs=y_known.ArrayAdd(RT.JaggedProduct(Axb), -1);
+                var J=RT.JaggedProduct(A.JaggedProduct(R));
                 var xu=SystemSolve(J, rhs, out _);
                 if (xu!=null)
                 {
-                    x_known=x.VectorAdd(R.MatrixProduct(xu));
-                    y_known=A.MatrixProduct(x_known).VectorAdd(b);
+                    x_known=x.ArrayAdd(R.JaggedProduct(xu));
+                    y_known=A.JaggedProduct(x_known).ArrayAdd(b);
                     return true;
                 }
                 return false;
             }
             else
             {
-                y_known=A.MatrixProduct(x_known).VectorAdd(b);
+                y_known=A.JaggedProduct(x_known).ArrayAdd(b);
                 return true;
             }
         }
@@ -404,7 +404,7 @@ namespace JA.LinearAlgebra
         }
         public static double[][] UnPermute(double[][] luProduct, int[] perm)
         {
-            double[][] result = Factory.CopyJaggedMatrix(luProduct);
+            double[][] result = CopyJaggedMatrix(luProduct);
             int[] unperm = new int[perm.Length];
             for (int i = 0; i<perm.Length; ++i)
             {

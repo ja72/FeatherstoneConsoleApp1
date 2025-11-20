@@ -45,7 +45,7 @@ namespace JA.LinearAlgebra
                 part[i]=values[i].Length;
             }
             this.partitions=part;
-            this.elements=Factory.ToArray(values);
+            this.elements=NativeArrays.ToArray(values);
         }
         public StackedVector(params Vector[] partitions)
             : this(partitions.Select(v => v.Elements).ToArray()) 
@@ -156,11 +156,11 @@ namespace JA.LinearAlgebra
             {
                 throw new ArgumentException("Incompatible Partitions.", nameof(B));
             }
-            return NativeArrays.VectorDot(A.elements, B.elements);
+            return NativeArrays.ArrayDot(A.elements, B.elements);
         }
         public static StackedMatrix Outer(StackedVector A, StackedVector B)
         {
-            var values = NativeArrays.VectorOuterArray2(A.elements, B.elements);
+            var values = NativeArrays.Array2Outer(A.elements, B.elements);
 
             return new StackedMatrix(A.partitions, B.partitions, values);
         }
